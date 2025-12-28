@@ -1,0 +1,6740 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Esperanto Type Storm - 世界语打字风暴</title>
+    <style>
+        :root {
+            --primary: #00f3ff;
+            --secondary: #ff00ff;
+            --accent: #ffff00;
+            --danger: #ff3366;
+            --bg-color: #050510;
+            --grid-color: rgba(0, 243, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-color);
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 背景网格动画 */
+        .grid-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            perspective: 500px;
+            overflow: hidden;
+            z-index: 0;
+        }
+
+        .grid-background::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background-image:
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+            background-size: 50px 50px;
+            transform: rotateX(60deg);
+            animation: gridMove 20s linear infinite;
+        }
+
+        @keyframes gridMove {
+            0% { transform: rotateX(60deg) translateY(0); }
+            100% { transform: rotateX(60deg) translateY(50px); }
+        }
+
+        /* 主容器 */
+        .container {
+            position: relative;
+            z-index: 1;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 菜单界面 */
+        .menu {
+            text-align: center;
+            padding: 40px;
+            background: rgba(5, 5, 16, 0.8);
+            border-radius: 20px;
+            border: 2px solid var(--primary);
+            box-shadow: 0 0 30px var(--primary), inset 0 0 30px rgba(0, 243, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .menu h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            color: var(--primary);
+            text-shadow: 0 0 10px var(--primary), 0 0 20px var(--primary), 0 0 40px var(--primary);
+            animation: neonPulse 2s ease-in-out infinite;
+        }
+
+        .menu h2 {
+            font-size: 1.2rem;
+            margin-bottom: 40px;
+            color: var(--secondary);
+            text-shadow: 0 0 10px var(--secondary);
+        }
+
+        @keyframes neonPulse {
+            0%, 100% { text-shadow: 0 0 10px var(--primary), 0 0 20px var(--primary), 0 0 40px var(--primary); }
+            50% { text-shadow: 0 0 20px var(--primary), 0 0 40px var(--primary), 0 0 80px var(--primary), 0 0 120px var(--primary); }
+        }
+
+        .menu-buttons {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            border: 2px solid var(--primary);
+            background: transparent;
+            color: var(--primary);
+            cursor: pointer;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            text-shadow: 0 0 5px var(--primary);
+            box-shadow: 0 0 10px var(--primary);
+            font-family: inherit;
+        }
+
+        .btn:hover {
+            background: var(--primary);
+            color: var(--bg-color);
+            box-shadow: 0 0 30px var(--primary), 0 0 60px var(--primary);
+            transform: scale(1.05);
+        }
+
+        .btn.medium {
+            border-color: var(--secondary);
+            color: var(--secondary);
+            text-shadow: 0 0 5px var(--secondary);
+            box-shadow: 0 0 10px var(--secondary);
+        }
+
+        .btn.medium:hover {
+            background: var(--secondary);
+            box-shadow: 0 0 30px var(--secondary), 0 0 60px var(--secondary);
+        }
+
+        .btn.hard {
+            border-color: var(--danger);
+            color: var(--danger);
+            text-shadow: 0 0 5px var(--danger);
+            box-shadow: 0 0 10px var(--danger);
+        }
+
+        .btn.hard:hover {
+            background: var(--danger);
+            box-shadow: 0 0 30px var(--danger), 0 0 60px var(--danger);
+        }
+
+        .btn.resume {
+            border-color: var(--accent);
+            color: var(--accent);
+            text-shadow: 0 0 5px var(--accent);
+            box-shadow: 0 0 10px var(--accent);
+        }
+
+        .btn.resume:hover {
+            background: var(--accent);
+            box-shadow: 0 0 30px var(--accent), 0 0 60px var(--accent);
+        }
+
+        .btn.hidden {
+            display: none;
+        }
+
+        /* 游戏界面 */
+        .game-container {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+        }
+
+        .game-container.active {
+            display: block;
+        }
+
+        #gameCanvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* HUD */
+        .hud {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .hud-left {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .score-section {
+            background: rgba(5, 5, 16, 0.8);
+            padding: 15px 25px;
+            border-radius: 10px;
+            border: 1px solid var(--primary);
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.3);
+            backdrop-filter: blur(5px);
+        }
+
+        .score-section h3 {
+            color: var(--primary);
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+            text-shadow: 0 0 5px var(--primary);
+        }
+
+        .score-section .value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 0 10px var(--primary);
+        }
+
+        .hud-right {
+            display: flex;
+            gap: 15px;
+        }
+
+        .difficulty-badge {
+            background: rgba(5, 5, 16, 0.8);
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: 1px solid var(--secondary);
+            color: var(--secondary);
+            font-weight: bold;
+            text-shadow: 0 0 5px var(--secondary);
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.3);
+            backdrop-filter: blur(5px);
+        }
+
+        .high-score {
+            background: rgba(5, 5, 16, 0.8);
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            font-weight: bold;
+            text-shadow: 0 0 5px var(--accent);
+            box-shadow: 0 0 20px rgba(255, 255, 0, 0.3);
+            backdrop-filter: blur(5px);
+        }
+
+        /* 生命条 */
+        .health-bar-container {
+            position: fixed;
+            bottom: 85px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px;
+            z-index: 100;
+        }
+
+        .health-bar-container label {
+            display: block;
+            text-align: center;
+            margin-bottom: 5px;
+            color: var(--danger);
+            font-weight: bold;
+            font-size: 0.9rem;
+            text-shadow: 0 0 5px var(--danger);
+        }
+
+        .health-bar {
+            height: 18px;
+            background: rgba(255, 51, 102, 0.2);
+            border: 2px solid var(--danger);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(255, 51, 102, 0.3);
+        }
+
+        .health-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--danger), #ff6b9d);
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px var(--danger);
+        }
+
+        .health-number {
+            text-align: center;
+            margin-top: 5px;
+            font-size: 1rem;
+            font-weight: bold;
+            color: var(--danger);
+            text-shadow: 0 0 5px var(--danger);
+        }
+
+        /* 输入框 */
+        .input-container {
+            position: fixed;
+            bottom: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+        }
+
+        #wordInput {
+            width: 300px;
+            padding: 15px 25px;
+            font-size: 1.2rem;
+            background: rgba(5, 5, 16, 0.8);
+            border: 2px solid var(--primary);
+            border-radius: 10px;
+            color: white;
+            text-align: center;
+            outline: none;
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.3);
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+        }
+
+        #wordInput:focus {
+            box-shadow: 0 0 30px var(--primary), 0 0 60px var(--primary);
+        }
+
+        #wordInput::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* 暂停界面 */
+        .pause-overlay, .gameover-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(5, 5, 16, 0.9);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .pause-overlay.active, .gameover-overlay.active {
+            display: flex;
+        }
+
+        .pause-content, .gameover-content {
+            text-align: center;
+            padding: 40px 60px;
+            background: rgba(5, 5, 16, 0.9);
+            border-radius: 20px;
+            border: 2px solid var(--primary);
+            box-shadow: 0 0 50px var(--primary);
+        }
+
+        .pause-content h2, .gameover-content h2 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            color: var(--primary);
+            text-shadow: 0 0 20px var(--primary);
+        }
+
+        .gameover-content h2 {
+            color: var(--danger);
+            text-shadow: 0 0 20px var(--danger);
+        }
+
+        .pause-content p, .gameover-content p {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            color: var(--secondary);
+        }
+
+        .final-score {
+            font-size: 3rem;
+            color: var(--accent);
+            margin: 20px 0;
+            text-shadow: 0 0 20px var(--accent);
+        }
+
+        .pause-buttons, .gameover-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* 震动动画 */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .shake {
+            animation: shake 0.3s ease-in-out;
+        }
+
+        /* 受伤闪红效果 */
+        .damage-flash {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 51, 102, 0.3);
+            pointer-events: none;
+            z-index: 150;
+            opacity: 0;
+            transition: opacity 0.1s ease;
+        }
+
+        .damage-flash.active {
+            opacity: 1;
+        }
+
+        /* 提示信息 */
+        /* 单词模式选择器 */
+        .word-mode-selector {
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .word-mode-selector label {
+            color: var(--secondary);
+            font-size: 1rem;
+            text-shadow: 0 0 5px var(--secondary);
+        }
+
+        .mode-btn {
+            padding: 10px 20px;
+            font-size: 1rem;
+            border: 2px solid var(--secondary);
+            background: transparent;
+            color: var(--secondary);
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .mode-btn:hover {
+            background: rgba(255, 0, 255, 0.2);
+            box-shadow: 0 0 15px var(--secondary);
+        }
+
+        .mode-btn.active {
+            background: var(--secondary);
+            color: var(--bg-color);
+            box-shadow: 0 0 20px var(--secondary);
+        }
+
+        .hint {
+            margin-top: 20px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+        }
+
+        /* 生命值模式选择器 */
+        .health-mode-selector {
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .health-mode-selector label {
+            color: var(--accent);
+            font-size: 1rem;
+            text-shadow: 0 0 5px var(--accent);
+        }
+
+        .health-mode-selector .mode-btn {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .health-mode-selector .mode-btn:hover {
+            background: rgba(255, 255, 0, 0.2);
+            box-shadow: 0 0 15px var(--accent);
+        }
+
+        .health-mode-selector .mode-btn.active {
+            background: var(--accent);
+            color: var(--bg-color);
+            box-shadow: 0 0 20px var(--accent);
+        }
+
+        /* 设置按钮容器 */
+        .settings-btn-container {
+            margin: 15px 0;
+        }
+
+        .settings-btn {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        /* 设置弹窗 */
+        .settings-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(5, 5, 16, 0.9);
+            z-index: 300;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .settings-overlay.active {
+            display: flex;
+        }
+
+        .settings-content {
+            text-align: center;
+            padding: 40px 50px;
+            background: rgba(5, 5, 16, 0.95);
+            border-radius: 20px;
+            border: 2px solid var(--primary);
+            box-shadow: 0 0 50px var(--primary);
+            min-width: 350px;
+        }
+
+        .settings-content h2 {
+            font-size: 2rem;
+            margin-bottom: 30px;
+            color: var(--primary);
+            text-shadow: 0 0 20px var(--primary);
+        }
+
+        .setting-item {
+            margin-bottom: 25px;
+            padding: 15px;
+            background: rgba(0, 243, 255, 0.05);
+            border-radius: 10px;
+            border: 1px solid rgba(0, 243, 255, 0.3);
+        }
+
+        .setting-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+            color: white;
+        }
+
+        .setting-status {
+            font-size: 0.9rem;
+            color: var(--primary);
+        }
+
+        .volume-slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: rgba(0, 243, 255, 0.2);
+            outline: none;
+            appearance: none;
+            -webkit-appearance: none;
+            margin-bottom: 10px;
+        }
+
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            box-shadow: 0 0 10px var(--primary);
+        }
+
+        .volume-slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 0 10px var(--primary);
+        }
+
+        .setting-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .toggle-btn {
+            padding: 10px 20px;
+            font-size: 1.2rem;
+            border: 2px solid var(--primary);
+            background: transparent;
+            color: var(--primary);
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-btn:hover {
+            background: rgba(0, 243, 255, 0.2);
+            box-shadow: 0 0 15px var(--primary);
+        }
+
+        .toggle-btn.off {
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+
+        .toggle-btn.off:hover {
+            background: rgba(255, 51, 102, 0.2);
+            box-shadow: 0 0 15px var(--danger);
+        }
+
+        /* 关于部分 */
+        .about-section {
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .about-section h3 {
+            font-size: 1.1rem;
+            color: var(--primary);
+            text-shadow: 0 0 5px var(--primary);
+            cursor: pointer;
+            user-select: none;
+            padding: 10px;
+            background: rgba(0, 243, 255, 0.05);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .about-section h3:hover {
+            background: rgba(0, 243, 255, 0.1);
+        }
+
+        .about-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .about-content.expanded {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .about-content::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .about-content::-webkit-scrollbar-track {
+            background: rgba(0, 243, 255, 0.1);
+        }
+
+        .about-content::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 5px;
+        }
+
+        .about-item {
+            padding: 10px;
+            margin: 8px 0;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 5px;
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+
+        .about-item h4 {
+            color: var(--secondary);
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .about-item p {
+            color: rgba(255, 255, 255, 0.8);
+            margin: 4px 0;
+        }
+
+        .about-item.contact {
+            text-align: center;
+            background: rgba(255, 0, 255, 0.05);
+            border: 1px solid rgba(255, 0, 255, 0.2);
+        }
+
+        .about-item.contact h4 {
+            color: var(--accent);
+        }
+
+        .about-item.contact p {
+            color: var(--accent);
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- 背景网格 -->
+    <div class="grid-background"></div>
+
+    <!-- 主菜单 -->
+    <div class="container" id="mainMenu">
+        <div class="menu">
+            <h1>ESPERANTO TYPE STORM</h1>
+            <h2>世界语打字风暴</h2>
+            <div class="menu-buttons">
+                <button class="btn" onclick="startGame('easy')">简单</button>
+                <button class="btn medium" onclick="startGame('medium')">普通</button>
+                <button class="btn hard" onclick="startGame('hard')">困难</button>
+                <button class="btn resume hidden" id="resumeBtn" onclick="resumeGame()">继续上次进度</button>
+            </div>
+
+            <div class="word-mode-selector">
+                <label>单词模式：</label>
+                <button class="mode-btn active" id="modeRandom" onclick="setWordMode('random')">🔀 完全随机</button>
+                <button class="mode-btn" id="modeSequential" onclick="setWordMode('sequential')">📋 按顺序</button>
+            </div>
+
+            <div class="health-mode-selector">
+                <label>生命值：</label>
+                <button class="mode-btn active" id="healthConservative" onclick="setHealthMode('conservative')">🟢 保守</button>
+                <button class="mode-btn" id="healthStandard" onclick="setHealthMode('standard')">🔵 标准</button>
+                <button class="mode-btn" id="healthExtended" onclick="setHealthMode('extended')">🟣 长时</button>
+            </div>
+
+            <div class="settings-btn-container">
+                <button class="btn settings-btn" onclick="openSettings()">⚙️ 设置</button>
+            </div>
+
+            <p class="hint">按 ESC 暂停游戏 | 输入掉落的单词得分</p>
+        </div>
+    </div>
+
+    <!-- 游戏界面 -->
+    <div class="game-container" id="gameContainer">
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- HUD -->
+        <div class="hud">
+            <div class="hud-left">
+                <div class="score-section">
+                    <h3>得分</h3>
+                    <div class="value" id="scoreDisplay">0</div>
+                </div>
+            </div>
+            <div class="hud-right">
+                <div class="difficulty-badge" id="difficultyDisplay">简单</div>
+                <div class="high-score">最高: <span id="highScoreDisplay">0</span></div>
+            </div>
+        </div>
+
+        <!-- 生命条 -->
+        <div class="health-bar-container">
+            <label>生命值</label>
+            <div class="health-bar">
+                <div class="health-fill" id="healthFill" style="width: 100%"></div>
+            </div>
+            <div class="health-number" id="healthNumber">200 / 200</div>
+        </div>
+
+        <!-- 输入框 -->
+        <div class="input-container">
+            <input type="text" id="wordInput" placeholder="输入单词..." autocomplete="off" spellcheck="false">
+        </div>
+
+        <!-- 受伤闪红效果 -->
+        <div class="damage-flash" id="damageFlash"></div>
+    </div>
+
+    <!-- 暂停界面 -->
+    <div class="pause-overlay" id="pauseOverlay">
+        <div class="pause-content">
+            <h2>已暂停</h2>
+            <p>游戏进度已自动保存</p>
+            <div class="pause-buttons">
+                <button class="btn" onclick="togglePause()">继续游戏</button>
+                <button class="btn medium" onclick="backToMenu()">返回菜单</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 游戏结束界面 -->
+    <div class="gameover-overlay" id="gameoverOverlay">
+        <div class="gameover-content">
+            <h2>GAME OVER</h2>
+            <p>最终得分</p>
+            <div class="final-score" id="finalScore">0</div>
+            <p>最高分: <span id="finalHighScore">0</span></p>
+            <div class="gameover-buttons">
+                <button class="btn" onclick="restartGame()">再来一局</button>
+                <button class="btn medium" onclick="backToMenu()">返回菜单</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 设置面板 -->
+    <div class="settings-overlay" id="settingsOverlay">
+        <div class="settings-content">
+            <h2>⚙️ 设置</h2>
+
+            <div class="setting-item">
+                <div class="setting-label">
+                    <span>🎵 背景音乐</span>
+                    <span class="setting-status" id="bgmStatus">已开启</span>
+                </div>
+                <input type="range" class="volume-slider" id="bgmVolumeSlider" min="0" max="100" value="30">
+                <div class="setting-controls">
+                    <button class="toggle-btn" id="bgmToggle" onclick="toggleBGM()">🔊</button>
+                </div>
+            </div>
+
+            <div class="setting-item">
+                <div class="setting-label">
+                    <span>🔊 音效</span>
+                    <span class="setting-status" id="sfxStatus">已开启</span>
+                </div>
+                <div class="setting-controls">
+                    <button class="toggle-btn" id="sfxToggle" onclick="toggleSFX()">🔊</button>
+                </div>
+            </div>
+
+            <div class="about-section">
+                <h3 onclick="toggleAbout()">ℹ️ 关于</h3>
+                <div class="about-content" id="aboutContent">
+                    <div class="about-item">
+                        <h4>背景音乐版权</h4>
+                        <p>Music by: bensound.com</p>
+                        <p>License code: MREQ7PYSI7LRNLJR</p>
+                        <p>Artist: Benjamin Lazzarus</p>
+                    </div>
+                    <div class="about-item">
+                        <p>Music by: bensound.com</p>
+                        <p>License code: RDNI1JG1LDCCLSWW</p>
+                        <p>Artist: Roman Senyk</p>
+                    </div>
+                    <div class="about-item">
+                        <p>Music by: bensound.com</p>
+                        <p>License code: UHOEOFRWEDZB8DU4</p>
+                        <p>Artist: Aventure</p>
+                    </div>
+                    <div class="about-item">
+                        <p>Royalty Free Music: Bensound.com</p>
+                        <p>License code: B6SBKWBZQD2SBSQB</p>
+                        <p>Artist: Aventure</p>
+                    </div>
+                    <div class="about-item">
+                        <p>Music by: Bensound</p>
+                        <p>License code: 2VCHYH5J5DQLQEBO</p>
+                        <p>Artist: Aventure</p>
+                    </div>
+                    <div class="about-item contact">
+                        <h4>联系作者</h4>
+                        <p>📧 1877303149@qq.com</p>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn" onclick="closeSettings()">关闭</button>
+        </div>
+    </div>
+
+    <script>
+        // ==================== 游戏配置 ====================
+
+        // 单词数据库
+        const wordDatabase = [
+    {
+        "word": "a",
+        "trans": "[词尾]形容词，第…",
+        "audio": "esperanto 1000基础词 一词一音/0001.mp3"
+    },
+    {
+        "word": "aboni",
+        "trans": "（事先付款）预订",
+        "audio": "esperanto 1000基础词 一词一音/0002.mp3"
+    },
+    {
+        "word": "aĉ",
+        "trans": "表示无价值，无用",
+        "audio": "esperanto 1000基础词 一词一音/0003.mp3"
+    },
+    {
+        "word": "aĉeti",
+        "trans": "买",
+        "audio": "esperanto 1000基础词 一词一音/0004.mp3"
+    },
+    {
+        "word": "ad",
+        "trans": "继续，反复",
+        "audio": "esperanto 1000基础词 一词一音/0005.mp3"
+    },
+    {
+        "word": "adreso",
+        "trans": "地址",
+        "audio": "esperanto 1000基础词 一词一音/0006.mp3"
+    },
+    {
+        "word": "aero",
+        "trans": "空气，气体",
+        "audio": "esperanto 1000基础词 一词一音/0007.mp3"
+    },
+    {
+        "word": "afabla",
+        "trans": "和气的，和蔼的",
+        "audio": "esperanto 1000基础词 一词一音/0008.mp3"
+    },
+    {
+        "word": "afero",
+        "trans": "事（情），事业",
+        "audio": "esperanto 1000基础词 一词一音/0009.mp3"
+    },
+    {
+        "word": "agi",
+        "trans": "行动，对待",
+        "audio": "esperanto 1000基础词 一词一音/0010.mp3"
+    },
+    {
+        "word": "agrabla",
+        "trans": "令人愉快的",
+        "audio": "esperanto 1000基础词 一词一音/0011.mp3"
+    },
+    {
+        "word": "aĝo",
+        "trans": "年龄，时代",
+        "audio": "esperanto 1000基础词 一词一音/0012.mp3"
+    },
+    {
+        "word": "ajn",
+        "trans": "无论，不管",
+        "audio": "esperanto 1000基础词 一词一音/0013.mp3"
+    },
+    {
+        "word": "aĵ",
+        "trans": "事物",
+        "audio": "esperanto 1000基础词 一词一音/0014.mp3"
+    },
+    {
+        "word": "akcepti",
+        "trans": "接受，接待",
+        "audio": "esperanto 1000基础词 一词一音/0015.mp3"
+    },
+    {
+        "word": "akra",
+        "trans": "锋利，尖锐",
+        "audio": "esperanto 1000基础词 一词一音/0016.mp3"
+    },
+    {
+        "word": "aktiva",
+        "trans": "有能力的，有作用的",
+        "audio": "esperanto 1000基础词 一词一音/0017.mp3"
+    },
+    {
+        "word": "akvo",
+        "trans": "水",
+        "audio": "esperanto 1000基础词 一词一音/0018.mp3"
+    },
+    {
+        "word": "al",
+        "trans": "向",
+        "audio": "esperanto 1000基础词 一词一音/0019.mp3"
+    },
+    {
+        "word": "alia",
+        "trans": "另外的",
+        "audio": "esperanto 1000基础词 一词一音/0020.mp3"
+    },
+    {
+        "word": "almenaŭ",
+        "trans": "至少，起码",
+        "audio": "esperanto 1000基础词 一词一音/0021.mp3"
+    },
+    {
+        "word": "alta",
+        "trans": "高",
+        "audio": "esperanto 1000基础词 一词一音/0022.mp3"
+    },
+    {
+        "word": "amaso",
+        "trans": "一大堆，一群",
+        "audio": "esperanto 1000基础词 一词一音/0023.mp3"
+    },
+    {
+        "word": "ambaŭ",
+        "trans": "两者",
+        "audio": "esperanto 1000基础词 一词一音/0024.mp3"
+    },
+    {
+        "word": "ami",
+        "trans": "爱",
+        "audio": "esperanto 1000基础词 一词一音/0025.mp3"
+    },
+    {
+        "word": "amiko",
+        "trans": "朋友",
+        "audio": "esperanto 1000基础词 一词一音/0026.mp3"
+    },
+    {
+        "word": "amuzi",
+        "trans": "逗笑，使…高兴",
+        "audio": "esperanto 1000基础词 一词一音/0027.mp3"
+    },
+    {
+        "word": "an",
+        "trans": "成员",
+        "audio": "esperanto 1000基础词 一词一音/0028.mp3"
+    },
+    {
+        "word": "angulo",
+        "trans": "角，角落",
+        "audio": "esperanto 1000基础词 一词一音/0029.mp3"
+    },
+    {
+        "word": "animo",
+        "trans": "灵魂，精神",
+        "audio": "esperanto 1000基础词 一词一音/0030.mp3"
+    },
+    {
+        "word": "ankaŭ",
+        "trans": "也",
+        "audio": "esperanto 1000基础词 一词一音/0031.mp3"
+    },
+    {
+        "word": "ankoraŭ",
+        "trans": "还，仍",
+        "audio": "esperanto 1000基础词 一词一音/0032.mp3"
+    },
+    {
+        "word": "anonci",
+        "trans": "宣布，通告",
+        "audio": "esperanto 1000基础词 一词一音/0033.mp3"
+    },
+    {
+        "word": "anstataŭ",
+        "trans": "代替",
+        "audio": "esperanto 1000基础词 一词一音/0034.mp3"
+    },
+    {
+        "word": "ant",
+        "trans": "主动现在分词（进行体）",
+        "audio": "esperanto 1000基础词 一词一音/0035.mp3"
+    },
+    {
+        "word": "antaŭ",
+        "trans": "在…前面，在…以前",
+        "audio": "esperanto 1000基础词 一词一音/0036.mp3"
+    },
+    {
+        "word": "aparato",
+        "trans": "一套装置，仪器",
+        "audio": "esperanto 1000基础词 一词一音/0037.mp3"
+    },
+    {
+        "word": "aparta",
+        "trans": "单独的，个别的",
+        "audio": "esperanto 1000基础词 一词一音/0038.mp3"
+    },
+    {
+        "word": "aparteni",
+        "trans": "属，属于",
+        "audio": "esperanto 1000基础词 一词一音/0039.mp3"
+    },
+    {
+        "word": "apenaŭ",
+        "trans": "至多，几乎不",
+        "audio": "esperanto 1000基础词 一词一音/0040.mp3"
+    },
+    {
+        "word": "aperi",
+        "trans": "出现",
+        "audio": "esperanto 1000基础词 一词一音/0041.mp3"
+    },
+    {
+        "word": "aprilo",
+        "trans": "四月",
+        "audio": "esperanto 1000基础词 一词一音/0042.mp3"
+    },
+    {
+        "word": "apud",
+        "trans": "在…近旁",
+        "audio": "esperanto 1000基础词 一词一音/0043.mp3"
+    },
+    {
+        "word": "ar",
+        "trans": "集合",
+        "audio": "esperanto 1000基础词 一词一音/0044.mp3"
+    },
+    {
+        "word": "aranĝi",
+        "trans": "整理，布置",
+        "audio": "esperanto 1000基础词 一词一音/0045.mp3"
+    },
+    {
+        "word": "arbo",
+        "trans": "树",
+        "audio": "esperanto 1000基础词 一词一音/0046.mp3"
+    },
+    {
+        "word": "artikolo",
+        "trans": "冠词，文章",
+        "audio": "esperanto 1000基础词 一词一音/0047.mp3"
+    },
+    {
+        "word": "arto",
+        "trans": "技艺，艺术",
+        "audio": "esperanto 1000基础词 一词一音/0048.mp3"
+    },
+    {
+        "word": "as",
+        "trans": "[词尾]直陈式现在时",
+        "audio": "esperanto 1000基础词 一词一音/0049.mp3"
+    },
+    {
+        "word": "asocio",
+        "trans": "协会，联合会",
+        "audio": "esperanto 1000基础词 一词一音/0050.mp3"
+    },
+    {
+        "word": "aspekti",
+        "trans": "像是，貌似",
+        "audio": "esperanto 1000基础词 一词一音/0051.mp3"
+    },
+    {
+        "word": "at",
+        "trans": "被动现在分词（进行体）",
+        "audio": "esperanto 1000基础词 一词一音/0052.mp3"
+    },
+    {
+        "word": "ataki",
+        "trans": "进攻，袭击",
+        "audio": "esperanto 1000基础词 一词一音/0053.mp3"
+    },
+    {
+        "word": "atendi",
+        "trans": "等待，预料",
+        "audio": "esperanto 1000基础词 一词一音/0054.mp3"
+    },
+    {
+        "word": "atenta",
+        "trans": "注意的，留心的",
+        "audio": "esperanto 1000基础词 一词一音/0055.mp3"
+    },
+    {
+        "word": "atingi",
+        "trans": "到达，达到",
+        "audio": "esperanto 1000基础词 一词一音/0056.mp3"
+    },
+    {
+        "word": "aŭ",
+        "trans": "或者，还是",
+        "audio": "esperanto 1000基础词 一词一音/0057.mp3"
+    },
+    {
+        "word": "aŭdi",
+        "trans": "听见",
+        "audio": "esperanto 1000基础词 一词一音/0058.mp3"
+    },
+    {
+        "word": "aŭgusto",
+        "trans": "八月",
+        "audio": "esperanto 1000基础词 一词一音/0059.mp3"
+    },
+    {
+        "word": "aŭskulti",
+        "trans": "听",
+        "audio": "esperanto 1000基础词 一词一音/0060.mp3"
+    },
+    {
+        "word": "aŭtobuso",
+        "trans": "公共汽车",
+        "audio": "esperanto 1000基础词 一词一音/0061.mp3"
+    },
+    {
+        "word": "aŭtomobilo",
+        "trans": "汽车",
+        "audio": "esperanto 1000基础词 一词一音/0062.mp3"
+    },
+    {
+        "word": "aŭtuno",
+        "trans": "秋天",
+        "audio": "esperanto 1000基础词 一词一音/0063.mp3"
+    },
+    {
+        "word": "avo",
+        "trans": "（外）祖父",
+        "audio": "esperanto 1000基础词 一词一音/0064.mp3"
+    },
+    {
+        "word": "azeno",
+        "trans": "驴",
+        "audio": "esperanto 1000基础词 一词一音/0065.mp3"
+    },
+    {
+        "word": "baldaŭ",
+        "trans": "不久，没多时",
+        "audio": "esperanto 1000基础词 一词一音/0066.mp3"
+    },
+    {
+        "word": "bani",
+        "trans": "洗澡，洗",
+        "audio": "esperanto 1000基础词 一词一音/0067.mp3"
+    },
+    {
+        "word": "bari",
+        "trans": "阻拦，阻挡",
+        "audio": "esperanto 1000基础词 一词一音/0068.mp3"
+    },
+    {
+        "word": "batali",
+        "trans": "战斗，斗争",
+        "audio": "esperanto 1000基础词 一词一音/0069.mp3"
+    },
+    {
+        "word": "bati",
+        "trans": "打，击",
+        "audio": "esperanto 1000基础词 一词一音/0070.mp3"
+    },
+    {
+        "word": "bazo",
+        "trans": "（地）基，基础",
+        "audio": "esperanto 1000基础词 一词一音/0071.mp3"
+    },
+    {
+        "word": "bedaŭri",
+        "trans": "痛惜，惋惜",
+        "audio": "esperanto 1000基础词 一词一音/0072.mp3"
+    },
+    {
+        "word": "bela",
+        "trans": "美丽，漂亮",
+        "audio": "esperanto 1000基础词 一词一音/0073.mp3"
+    },
+    {
+        "word": "besto",
+        "trans": "兽",
+        "audio": "esperanto 1000基础词 一词一音/0074.mp3"
+    },
+    {
+        "word": "bezoni",
+        "trans": "需要",
+        "audio": "esperanto 1000基础词 一词一音/0075.mp3"
+    },
+    {
+        "word": "biblioteko",
+        "trans": "图书馆",
+        "audio": "esperanto 1000基础词 一词一音/0076.mp3"
+    },
+    {
+        "word": "biciklo",
+        "trans": "（两轮）自行车",
+        "audio": "esperanto 1000基础词 一词一音/0077.mp3"
+    },
+    {
+        "word": "biero",
+        "trans": "啤酒",
+        "audio": "esperanto 1000基础词 一词一音/0078.mp3"
+    },
+    {
+        "word": "bildo",
+        "trans": "图，像",
+        "audio": "esperanto 1000基础词 一词一音/0079.mp3"
+    },
+    {
+        "word": "bileto",
+        "trans": "票，券",
+        "audio": "esperanto 1000基础词 一词一音/0080.mp3"
+    },
+    {
+        "word": "birdo",
+        "trans": "鸟",
+        "audio": "esperanto 1000基础词 一词一音/0081.mp3"
+    },
+    {
+        "word": "blanka",
+        "trans": "白色，空白",
+        "audio": "esperanto 1000基础词 一词一音/0082.mp3"
+    },
+    {
+        "word": "blovi",
+        "trans": "风吹，吹",
+        "audio": "esperanto 1000基础词 一词一音/0083.mp3"
+    },
+    {
+        "word": "blua",
+        "trans": "蓝色",
+        "audio": "esperanto 1000基础词 一词一音/0084.mp3"
+    },
+    {
+        "word": "bo",
+        "trans": "姻亲",
+        "audio": "esperanto 1000基础词 一词一音/0085.mp3"
+    },
+    {
+        "word": "boli",
+        "trans": "沸腾",
+        "audio": "esperanto 1000基础词 一词一音/0086.mp3"
+    },
+    {
+        "word": "bona",
+        "trans": "好",
+        "audio": "esperanto 1000基础词 一词一音/0087.mp3"
+    },
+    {
+        "word": "bordo",
+        "trans": "岸，边缘",
+        "audio": "esperanto 1000基础词 一词一音/0088.mp3"
+    },
+    {
+        "word": "botelo",
+        "trans": "细颈瓶",
+        "audio": "esperanto 1000基础词 一词一音/0089.mp3"
+    },
+    {
+        "word": "bovo",
+        "trans": "牛",
+        "audio": "esperanto 1000基础词 一词一音/0090.mp3"
+    },
+    {
+        "word": "brako",
+        "trans": "胳膊",
+        "audio": "esperanto 1000基础词 一词一音/0091.mp3"
+    },
+    {
+        "word": "brili",
+        "trans": "发光，闪耀",
+        "audio": "esperanto 1000基础词 一词一音/0092.mp3"
+    },
+    {
+        "word": "broso",
+        "trans": "硬毛刷，电刷",
+        "audio": "esperanto 1000基础词 一词一音/0093.mp3"
+    },
+    {
+        "word": "brui",
+        "trans": "发噪声，喧哗",
+        "audio": "esperanto 1000基础词 一词一音/0094.mp3"
+    },
+    {
+        "word": "bruli",
+        "trans": "燃烧",
+        "audio": "esperanto 1000基础词 一词一音/0095.mp3"
+    },
+    {
+        "word": "bruna",
+        "trans": "褐色，棕色",
+        "audio": "esperanto 1000基础词 一词一音/0096.mp3"
+    },
+    {
+        "word": "brusto",
+        "trans": "胸",
+        "audio": "esperanto 1000基础词 一词一音/0097.mp3"
+    },
+    {
+        "word": "buŝo",
+        "trans": "口",
+        "audio": "esperanto 1000基础词 一词一音/0098.mp3"
+    },
+    {
+        "word": "butero",
+        "trans": "黄油，奶油",
+        "audio": "esperanto 1000基础词 一词一音/0099.mp3"
+    },
+    {
+        "word": "butono",
+        "trans": "纽扣，扣子",
+        "audio": "esperanto 1000基础词 一词一音/0100.mp3"
+    },
+    {
+        "word": "celo",
+        "trans": "目的，目标",
+        "audio": "esperanto 1000基础词 一词一音/0101.mp3"
+    },
+    {
+        "word": "cent",
+        "trans": "百",
+        "audio": "esperanto 1000基础词 一词一音/0102.mp3"
+    },
+    {
+        "word": "centro",
+        "trans": "中心点，圆心",
+        "audio": "esperanto 1000基础词 一词一音/0103.mp3"
+    },
+    {
+        "word": "cerbo",
+        "trans": "（大）脑，头脑",
+        "audio": "esperanto 1000基础词 一词一音/0104.mp3"
+    },
+    {
+        "word": "certa",
+        "trans": "有把握的，确实的",
+        "audio": "esperanto 1000基础词 一词一音/0105.mp3"
+    },
+    {
+        "word": "cetera",
+        "trans": "其余，其他",
+        "audio": "esperanto 1000基础词 一词一音/0106.mp3"
+    },
+    {
+        "word": "cigaredo",
+        "trans": "纸烟，香烟",
+        "audio": "esperanto 1000基础词 一词一音/0107.mp3"
+    },
+    {
+        "word": "cirklo",
+        "trans": "圆，圆面",
+        "audio": "esperanto 1000基础词 一词一音/0108.mp3"
+    },
+    {
+        "word": "ĉambro",
+        "trans": "房间",
+        "audio": "esperanto 1000基础词 一词一音/0109.mp3"
+    },
+    {
+        "word": "ĉapelo",
+        "trans": "有檐帽",
+        "audio": "esperanto 1000基础词 一词一音/0110.mp3"
+    },
+    {
+        "word": "ĉar",
+        "trans": "因为",
+        "audio": "esperanto 1000基础词 一词一音/0111.mp3"
+    },
+    {
+        "word": "ĉe",
+        "trans": "在…身边，紧挨着…",
+        "audio": "esperanto 1000基础词 一词一音/0112.mp3"
+    },
+    {
+        "word": "ĉefa",
+        "trans": "主要的",
+        "audio": "esperanto 1000基础词 一词一音/0113.mp3"
+    },
+    {
+        "word": "ĉemizo",
+        "trans": "男衬衣，运动服",
+        "audio": "esperanto 1000基础词 一词一音/0114.mp3"
+    },
+    {
+        "word": "ĉesi",
+        "trans": "停止，中止",
+        "audio": "esperanto 1000基础词 一词一音/0115.mp3"
+    },
+    {
+        "word": "ĉevalo",
+        "trans": "马",
+        "audio": "esperanto 1000基础词 一词一音/0116.mp3"
+    },
+    {
+        "word": "ĉi",
+        "trans": "这里，这",
+        "audio": "esperanto 1000基础词 一词一音/0117.mp3"
+    },
+    {
+        "word": "ĉia",
+        "trans": "每种的，各样的",
+        "audio": "esperanto 1000基础词 一词一音/0118.mp3"
+    },
+    {
+        "word": "ĉiam",
+        "trans": "每次，总是",
+        "audio": "esperanto 1000基础词 一词一音/0119.mp3"
+    },
+    {
+        "word": "ĉie",
+        "trans": "到处，各处",
+        "audio": "esperanto 1000基础词 一词一音/0120.mp3"
+    },
+    {
+        "word": "ĉielo",
+        "trans": "天，天空",
+        "audio": "esperanto 1000基础词 一词一音/0121.mp3"
+    },
+    {
+        "word": "ĉio",
+        "trans": "一切，全部",
+        "audio": "esperanto 1000基础词 一词一音/0122.mp3"
+    },
+    {
+        "word": "ĉirkaŭ",
+        "trans": "环绕，在…周围",
+        "audio": "esperanto 1000基础词 一词一音/0123.mp3"
+    },
+    {
+        "word": "ĉiu",
+        "trans": "每个人，每个",
+        "audio": "esperanto 1000基础词 一词一音/0124.mp3"
+    },
+    {
+        "word": "ĉu",
+        "trans": "表示疑问，[ĉu…ĉu…]不管…",
+        "audio": "esperanto 1000基础词 一词一音/0125.mp3"
+    },
+    {
+        "word": "da",
+        "trans": "用在数量与可量名词之间，表示其后名词的量",
+        "audio": "esperanto 1000基础词 一词一音/0126.mp3"
+    },
+    {
+        "word": "danci",
+        "trans": "跳舞",
+        "audio": "esperanto 1000基础词 一词一音/0127.mp3"
+    },
+    {
+        "word": "danĝero",
+        "trans": "危险",
+        "audio": "esperanto 1000基础词 一词一音/0128.mp3"
+    },
+    {
+        "word": "danki",
+        "trans": "感谢",
+        "audio": "esperanto 1000基础词 一词一音/0129.mp3"
+    },
+    {
+        "word": "daŭri",
+        "trans": "继续",
+        "audio": "esperanto 1000基础词 一词一音/0130.mp3"
+    },
+    {
+        "word": "de",
+        "trans": "的，从",
+        "audio": "esperanto 1000基础词 一词一音/0131.mp3"
+    },
+    {
+        "word": "decembro",
+        "trans": "十二月",
+        "audio": "esperanto 1000基础词 一词一音/0132.mp3"
+    },
+    {
+        "word": "decidi",
+        "trans": "决心，决定",
+        "audio": "esperanto 1000基础词 一词一音/0133.mp3"
+    },
+    {
+        "word": "defendi",
+        "trans": "防御，保卫",
+        "audio": "esperanto 1000基础词 一词一音/0134.mp3"
+    },
+    {
+        "word": "dek",
+        "trans": "十",
+        "audio": "esperanto 1000基础词 一词一音/0135.mp3"
+    },
+    {
+        "word": "dekstra",
+        "trans": "右，右边",
+        "audio": "esperanto 1000基础词 一词一音/0136.mp3"
+    },
+    {
+        "word": "demandi",
+        "trans": "问",
+        "audio": "esperanto 1000基础词 一词一音/0137.mp3"
+    },
+    {
+        "word": "densa",
+        "trans": "密集，茂密",
+        "audio": "esperanto 1000基础词 一词一音/0138.mp3"
+    },
+    {
+        "word": "dento",
+        "trans": "牙，齿",
+        "audio": "esperanto 1000基础词 一词一音/0139.mp3"
+    },
+    {
+        "word": "desegni",
+        "trans": "画出轮廓，勾画",
+        "audio": "esperanto 1000基础词 一词一音/0140.mp3"
+    },
+    {
+        "word": "detalo",
+        "trans": "细节，细目",
+        "audio": "esperanto 1000基础词 一词一音/0141.mp3"
+    },
+    {
+        "word": "devi",
+        "trans": "必须",
+        "audio": "esperanto 1000基础词 一词一音/0142.mp3"
+    },
+    {
+        "word": "deziri",
+        "trans": "希求，想",
+        "audio": "esperanto 1000基础词 一词一音/0143.mp3"
+    },
+    {
+        "word": "diferenci",
+        "trans": "差异，不同",
+        "audio": "esperanto 1000基础词 一词一音/0144.mp3"
+    },
+    {
+        "word": "difini",
+        "trans": "下定义",
+        "audio": "esperanto 1000基础词 一词一音/0145.mp3"
+    },
+    {
+        "word": "dika",
+        "trans": "厚，粗",
+        "audio": "esperanto 1000基础词 一词一音/0146.mp3"
+    },
+    {
+        "word": "dimanĉo",
+        "trans": "星期日",
+        "audio": "esperanto 1000基础词 一词一音/0147.mp3"
+    },
+    {
+        "word": "dio",
+        "trans": "神",
+        "audio": "esperanto 1000基础词 一词一音/0148.mp3"
+    },
+    {
+        "word": "direkto",
+        "trans": "方向，方位",
+        "audio": "esperanto 1000基础词 一词一音/0149.mp3"
+    },
+    {
+        "word": "diri",
+        "trans": "说",
+        "audio": "esperanto 1000基础词 一词一音/0150.mp3"
+    },
+    {
+        "word": "dis",
+        "trans": "分散",
+        "audio": "esperanto 1000基础词 一词一音/0151.mp3"
+    },
+    {
+        "word": "disko",
+        "trans": "铁饼，唱片",
+        "audio": "esperanto 1000基础词 一词一音/0152.mp3"
+    },
+    {
+        "word": "diskuti",
+        "trans": "讨论",
+        "audio": "esperanto 1000基础词 一词一音/0153.mp3"
+    },
+    {
+        "word": "diversa",
+        "trans": "各种各样的",
+        "audio": "esperanto 1000基础词 一词一音/0154.mp3"
+    },
+    {
+        "word": "dividi",
+        "trans": "分，分配",
+        "audio": "esperanto 1000基础词 一词一音/0155.mp3"
+    },
+    {
+        "word": "do",
+        "trans": "那么，究竟",
+        "audio": "esperanto 1000基础词 一词一音/0156.mp3"
+    },
+    {
+        "word": "doktoro",
+        "trans": "博士",
+        "audio": "esperanto 1000基础词 一词一音/0157.mp3"
+    },
+    {
+        "word": "dolĉa",
+        "trans": "甜，甜美",
+        "audio": "esperanto 1000基础词 一词一音/0158.mp3"
+    },
+    {
+        "word": "dolori",
+        "trans": "使…痛苦，使…疼痛",
+        "audio": "esperanto 1000基础词 一词一音/0159.mp3"
+    },
+    {
+        "word": "domaĝo",
+        "trans": "遗憾，可惜",
+        "audio": "esperanto 1000基础词 一词一音/0160.mp3"
+    },
+    {
+        "word": "domo",
+        "trans": "房屋",
+        "audio": "esperanto 1000基础词 一词一音/0161.mp3"
+    },
+    {
+        "word": "donaci",
+        "trans": "送，赠送",
+        "audio": "esperanto 1000基础词 一词一音/0162.mp3"
+    },
+    {
+        "word": "doni",
+        "trans": "给",
+        "audio": "esperanto 1000基础词 一词一音/0163.mp3"
+    },
+    {
+        "word": "dormi",
+        "trans": "睡",
+        "audio": "esperanto 1000基础词 一词一音/0164.mp3"
+    },
+    {
+        "word": "dorso",
+        "trans": "背，背面",
+        "audio": "esperanto 1000基础词 一词一音/0165.mp3"
+    },
+    {
+        "word": "drato",
+        "trans": "金属线，其他材料的线",
+        "audio": "esperanto 1000基础词 一词一音/0166.mp3"
+    },
+    {
+        "word": "du",
+        "trans": "二",
+        "audio": "esperanto 1000基础词 一词一音/0167.mp3"
+    },
+    {
+        "word": "dubi",
+        "trans": "怀疑",
+        "audio": "esperanto 1000基础词 一词一音/0168.mp3"
+    },
+    {
+        "word": "dum",
+        "trans": "在整个某段时间内，当…时",
+        "audio": "esperanto 1000基础词 一词一音/0169.mp3"
+    },
+    {
+        "word": "dungi",
+        "trans": "雇佣",
+        "audio": "esperanto 1000基础词 一词一音/0170.mp3"
+    },
+    {
+        "word": "e",
+        "trans": "[词尾]副词",
+        "audio": "esperanto 1000基础词 一词一音/0171.mp3"
+    },
+    {
+        "word": "ebena",
+        "trans": "表面平整",
+        "audio": "esperanto 1000基础词 一词一音/0172.mp3"
+    },
+    {
+        "word": "ebl",
+        "trans": "表示可能",
+        "audio": "esperanto 1000基础词 一词一音/0173.mp3"
+    },
+    {
+        "word": "ec",
+        "trans": "性质",
+        "audio": "esperanto 1000基础词 一词一音/0174.mp3"
+    },
+    {
+        "word": "eĉ",
+        "trans": "甚至，就连…还",
+        "audio": "esperanto 1000基础词 一词一音/0175.mp3"
+    },
+    {
+        "word": "eduki",
+        "trans": "教育",
+        "audio": "esperanto 1000基础词 一词一音/0176.mp3"
+    },
+    {
+        "word": "edzo",
+        "trans": "丈夫",
+        "audio": "esperanto 1000基础词 一词一音/0177.mp3"
+    },
+    {
+        "word": "efektiva",
+        "trans": "实际，确实",
+        "audio": "esperanto 1000基础词 一词一音/0178.mp3"
+    },
+    {
+        "word": "efiki",
+        "trans": "生效，起作用",
+        "audio": "esperanto 1000基础词 一词一音/0179.mp3"
+    },
+    {
+        "word": "eg",
+        "trans": "表示巨大、很",
+        "audio": "esperanto 1000基础词 一词一音/0180.mp3"
+    },
+    {
+        "word": "egala",
+        "trans": "平等，相等",
+        "audio": "esperanto 1000基础词 一词一音/0181.mp3"
+    },
+    {
+        "word": "ej",
+        "trans": "地点",
+        "audio": "esperanto 1000基础词 一词一音/0182.mp3"
+    },
+    {
+        "word": "ek",
+        "trans": "开始或突然发生",
+        "audio": "esperanto 1000基础词 一词一音/0183.mp3"
+    },
+    {
+        "word": "ekonomio",
+        "trans": "经济",
+        "audio": "esperanto 1000基础词 一词一音/0184.mp3"
+    },
+    {
+        "word": "ekskurso",
+        "trans": "远足，郊游",
+        "audio": "esperanto 1000基础词 一词一音/0185.mp3"
+    },
+    {
+        "word": "ekspozicio",
+        "trans": "展览，展品",
+        "audio": "esperanto 1000基础词 一词一音/0186.mp3"
+    },
+    {
+        "word": "ekster",
+        "trans": "在…之外",
+        "audio": "esperanto 1000基础词 一词一音/0187.mp3"
+    },
+    {
+        "word": "ekzameni",
+        "trans": "考核，检查",
+        "audio": "esperanto 1000基础词 一词一音/0188.mp3"
+    },
+    {
+        "word": "ekzemplo",
+        "trans": "模范，榜样",
+        "audio": "esperanto 1000基础词 一词一音/0189.mp3"
+    },
+    {
+        "word": "ekzerci",
+        "trans": "练习，训练",
+        "audio": "esperanto 1000基础词 一词一音/0190.mp3"
+    },
+    {
+        "word": "ekzisti",
+        "trans": "存在",
+        "audio": "esperanto 1000基础词 一词一音/0191.mp3"
+    },
+    {
+        "word": "el",
+        "trans": "从…中，出于",
+        "audio": "esperanto 1000基础词 一词一音/0192.mp3"
+    },
+    {
+        "word": "elekti",
+        "trans": "选择，选举",
+        "audio": "esperanto 1000基础词 一词一音/0193.mp3"
+    },
+    {
+        "word": "elektro",
+        "trans": "电",
+        "audio": "esperanto 1000基础词 一词一音/0194.mp3"
+    },
+    {
+        "word": "em",
+        "trans": "倾向于…的，习惯…的",
+        "audio": "esperanto 1000基础词 一词一音/0195.mp3"
+    },
+    {
+        "word": "emocio",
+        "trans": "感动，激动",
+        "audio": "esperanto 1000基础词 一词一音/0196.mp3"
+    },
+    {
+        "word": "en",
+        "trans": "在…里",
+        "audio": "esperanto 1000基础词 一词一音/0197.mp3"
+    },
+    {
+        "word": "energio",
+        "trans": "精力，干劲",
+        "audio": "esperanto 1000基础词 一词一音/0198.mp3"
+    },
+    {
+        "word": "er",
+        "trans": "表示某物的构成分子",
+        "audio": "esperanto 1000基础词 一词一音/0199.mp3"
+    },
+    {
+        "word": "erari",
+        "trans": "迷路，犯错误",
+        "audio": "esperanto 1000基础词 一词一音/0200.mp3"
+    },
+    {
+        "word": "esperi",
+        "trans": "希望，期望",
+        "audio": "esperanto 1000基础词 一词一音/0201.mp3"
+    },
+    {
+        "word": "esplori",
+        "trans": "考察，探索",
+        "audio": "esperanto 1000基础词 一词一音/0202.mp3"
+    },
+    {
+        "word": "esprimi",
+        "trans": "表示，表现",
+        "audio": "esperanto 1000基础词 一词一音/0203.mp3"
+    },
+    {
+        "word": "esti",
+        "trans": "存在，是",
+        "audio": "esperanto 1000基础词 一词一音/0204.mp3"
+    },
+    {
+        "word": "estimi",
+        "trans": "尊重，敬重",
+        "audio": "esperanto 1000基础词 一词一音/0205.mp3"
+    },
+    {
+        "word": "estr",
+        "trans": "首长",
+        "audio": "esperanto 1000基础词 一词一音/0206.mp3"
+    },
+    {
+        "word": "et",
+        "trans": "表示小的意思",
+        "audio": "esperanto 1000基础词 一词一音/0207.mp3"
+    },
+    {
+        "word": "eventuala",
+        "trans": "可能发生的，万一的",
+        "audio": "esperanto 1000基础词 一词一音/0208.mp3"
+    },
+    {
+        "word": "evolui",
+        "trans": "进化，演化",
+        "audio": "esperanto 1000基础词 一词一音/0209.mp3"
+    },
+    {
+        "word": "facila",
+        "trans": "容易，轻微",
+        "audio": "esperanto 1000基础词 一词一音/0210.mp3"
+    },
+    {
+        "word": "fadeno",
+        "trans": "线，线索",
+        "audio": "esperanto 1000基础词 一词一音/0211.mp3"
+    },
+    {
+        "word": "fajro",
+        "trans": "火",
+        "audio": "esperanto 1000基础词 一词一音/0212.mp3"
+    },
+    {
+        "word": "fako",
+        "trans": "格子，学科",
+        "audio": "esperanto 1000基础词 一词一音/0213.mp3"
+    },
+    {
+        "word": "fakto",
+        "trans": "事实",
+        "audio": "esperanto 1000基础词 一词一音/0214.mp3"
+    },
+    {
+        "word": "fakturo",
+        "trans": "账单，发票",
+        "audio": "esperanto 1000基础词 一词一音/0215.mp3"
+    },
+    {
+        "word": "fali",
+        "trans": "落下，跌倒",
+        "audio": "esperanto 1000基础词 一词一音/0216.mp3"
+    },
+    {
+        "word": "fama",
+        "trans": "有名，著名",
+        "audio": "esperanto 1000基础词 一词一音/0217.mp3"
+    },
+    {
+        "word": "familio",
+        "trans": "家庭",
+        "audio": "esperanto 1000基础词 一词一音/0218.mp3"
+    },
+    {
+        "word": "fari",
+        "trans": "做，造",
+        "audio": "esperanto 1000基础词 一词一音/0219.mp3"
+    },
+    {
+        "word": "farti",
+        "trans": "起居，健康状况",
+        "audio": "esperanto 1000基础词 一词一音/0220.mp3"
+    },
+    {
+        "word": "februaro",
+        "trans": "二月",
+        "audio": "esperanto 1000基础词 一词一音/0221.mp3"
+    },
+    {
+        "word": "feliĉa",
+        "trans": "幸福，幸运",
+        "audio": "esperanto 1000基础词 一词一音/0222.mp3"
+    },
+    {
+        "word": "fenestro",
+        "trans": "窗户",
+        "audio": "esperanto 1000基础词 一词一音/0223.mp3"
+    },
+    {
+        "word": "ferio",
+        "trans": "假日",
+        "audio": "esperanto 1000基础词 一词一音/0224.mp3"
+    },
+    {
+        "word": "fermi",
+        "trans": "关",
+        "audio": "esperanto 1000基础词 一词一音/0225.mp3"
+    },
+    {
+        "word": "fero",
+        "trans": "铁",
+        "audio": "esperanto 1000基础词 一词一音/0226.mp3"
+    },
+    {
+        "word": "festi",
+        "trans": "庆祝，过（节）",
+        "audio": "esperanto 1000基础词 一词一音/0227.mp3"
+    },
+    {
+        "word": "fiksi",
+        "trans": "将…固定在…",
+        "audio": "esperanto 1000基础词 一词一音/0228.mp3"
+    },
+    {
+        "word": "filmo",
+        "trans": "胶片，感光片",
+        "audio": "esperanto 1000基础词 一词一音/0229.mp3"
+    },
+    {
+        "word": "filo",
+        "trans": "儿子",
+        "audio": "esperanto 1000基础词 一词一音/0230.mp3"
+    },
+    {
+        "word": "fingro",
+        "trans": "手指，脚趾",
+        "audio": "esperanto 1000基础词 一词一音/0231.mp3"
+    },
+    {
+        "word": "fini",
+        "trans": "结束，完成",
+        "audio": "esperanto 1000基础词 一词一音/0232.mp3"
+    },
+    {
+        "word": "fiŝo",
+        "trans": "鱼",
+        "audio": "esperanto 1000基础词 一词一音/0233.mp3"
+    },
+    {
+        "word": "flago",
+        "trans": "旗帜",
+        "audio": "esperanto 1000基础词 一词一音/0234.mp3"
+    },
+    {
+        "word": "flanko",
+        "trans": "面，侧",
+        "audio": "esperanto 1000基础词 一词一音/0235.mp3"
+    },
+    {
+        "word": "flava",
+        "trans": "黄颜色",
+        "audio": "esperanto 1000基础词 一词一音/0236.mp3"
+    },
+    {
+        "word": "floro",
+        "trans": "花",
+        "audio": "esperanto 1000基础词 一词一音/0237.mp3"
+    },
+    {
+        "word": "flugi",
+        "trans": "飞",
+        "audio": "esperanto 1000基础词 一词一音/0238.mp3"
+    },
+    {
+        "word": "flui",
+        "trans": "流，流动",
+        "audio": "esperanto 1000基础词 一词一音/0239.mp3"
+    },
+    {
+        "word": "fojo",
+        "trans": "次，回",
+        "audio": "esperanto 1000基础词 一词一音/0240.mp3"
+    },
+    {
+        "word": "folio",
+        "trans": "叶，张（两面）",
+        "audio": "esperanto 1000基础词 一词一音/0241.mp3"
+    },
+    {
+        "word": "fondi",
+        "trans": "建立，创建",
+        "audio": "esperanto 1000基础词 一词一音/0242.mp3"
+    },
+    {
+        "word": "fonto",
+        "trans": "泉，源",
+        "audio": "esperanto 1000基础词 一词一音/0243.mp3"
+    },
+    {
+        "word": "for",
+        "trans": "往远处，在远处",
+        "audio": "esperanto 1000基础词 一词一音/0244.mp3"
+    },
+    {
+        "word": "forgesi",
+        "trans": "忘记，忽略",
+        "audio": "esperanto 1000基础词 一词一音/0245.mp3"
+    },
+    {
+        "word": "forko",
+        "trans": "叉子，叉形物",
+        "audio": "esperanto 1000基础词 一词一音/0246.mp3"
+    },
+    {
+        "word": "formo",
+        "trans": "形状，样子",
+        "audio": "esperanto 1000基础词 一词一音/0247.mp3"
+    },
+    {
+        "word": "forta",
+        "trans": "强有力，坚强",
+        "audio": "esperanto 1000基础词 一词一音/0248.mp3"
+    },
+    {
+        "word": "fosi",
+        "trans": "掘土，翻地",
+        "audio": "esperanto 1000基础词 一词一音/0249.mp3"
+    },
+    {
+        "word": "foti",
+        "trans": "摄影，照相",
+        "audio": "esperanto 1000基础词 一词一音/0250.mp3"
+    },
+    {
+        "word": "frapi",
+        "trans": "敲打，拍打",
+        "audio": "esperanto 1000基础词 一词一音/0251.mp3"
+    },
+    {
+        "word": "frato",
+        "trans": "兄弟",
+        "audio": "esperanto 1000基础词 一词一音/0252.mp3"
+    },
+    {
+        "word": "fraŭlo",
+        "trans": "未婚男子",
+        "audio": "esperanto 1000基础词 一词一音/0253.mp3"
+    },
+    {
+        "word": "fremda",
+        "trans": "外国的，陌生",
+        "audio": "esperanto 1000基础词 一词一音/0254.mp3"
+    },
+    {
+        "word": "freneza",
+        "trans": "疯狂，失去理性的",
+        "audio": "esperanto 1000基础词 一词一音/0255.mp3"
+    },
+    {
+        "word": "freŝa",
+        "trans": "新鲜，鲜嫩",
+        "audio": "esperanto 1000基础词 一词一音/0256.mp3"
+    },
+    {
+        "word": "frosto",
+        "trans": "严寒，冰冻",
+        "audio": "esperanto 1000基础词 一词一音/0257.mp3"
+    },
+    {
+        "word": "frua",
+        "trans": "早的，早期的",
+        "audio": "esperanto 1000基础词 一词一音/0258.mp3"
+    },
+    {
+        "word": "frukto",
+        "trans": "果实，水果",
+        "audio": "esperanto 1000基础词 一词一音/0259.mp3"
+    },
+    {
+        "word": "fulmo",
+        "trans": "闪电",
+        "audio": "esperanto 1000基础词 一词一音/0260.mp3"
+    },
+    {
+        "word": "fumo",
+        "trans": "烟",
+        "audio": "esperanto 1000基础词 一词一音/0261.mp3"
+    },
+    {
+        "word": "funkcio",
+        "trans": "职能，职务",
+        "audio": "esperanto 1000基础词 一词一音/0262.mp3"
+    },
+    {
+        "word": "fuŝi",
+        "trans": "弄糟，拙劣地做",
+        "audio": "esperanto 1000基础词 一词一音/0263.mp3"
+    },
+    {
+        "word": "gaja",
+        "trans": "愉快，喜形于外",
+        "audio": "esperanto 1000基础词 一词一音/0264.mp3"
+    },
+    {
+        "word": "gajni",
+        "trans": "赢得，取得",
+        "audio": "esperanto 1000基础词 一词一音/0265.mp3"
+    },
+    {
+        "word": "gaso",
+        "trans": "气体，可燃气",
+        "audio": "esperanto 1000基础词 一词一音/0266.mp3"
+    },
+    {
+        "word": "gasto",
+        "trans": "客人，顾客",
+        "audio": "esperanto 1000基础词 一词一音/0267.mp3"
+    },
+    {
+        "word": "gazeto",
+        "trans": "期刊，杂志",
+        "audio": "esperanto 1000基础词 一词一音/0268.mp3"
+    },
+    {
+        "word": "ge",
+        "trans": "包括两性的",
+        "audio": "esperanto 1000基础词 一词一音/0269.mp3"
+    },
+    {
+        "word": "glacio",
+        "trans": "冰",
+        "audio": "esperanto 1000基础词 一词一音/0270.mp3"
+    },
+    {
+        "word": "glaso",
+        "trans": "玻璃杯",
+        "audio": "esperanto 1000基础词 一词一音/0271.mp3"
+    },
+    {
+        "word": "gliti",
+        "trans": "滑，溜冰",
+        "audio": "esperanto 1000基础词 一词一音/0272.mp3"
+    },
+    {
+        "word": "granda",
+        "trans": "大，伟大",
+        "audio": "esperanto 1000基础词 一词一音/0273.mp3"
+    },
+    {
+        "word": "graso",
+        "trans": "脂肪",
+        "audio": "esperanto 1000基础词 一词一音/0274.mp3"
+    },
+    {
+        "word": "gratuli",
+        "trans": "祝贺，庆贺",
+        "audio": "esperanto 1000基础词 一词一音/0275.mp3"
+    },
+    {
+        "word": "grava",
+        "trans": "重要，严重",
+        "audio": "esperanto 1000基础词 一词一音/0276.mp3"
+    },
+    {
+        "word": "greno",
+        "trans": "谷物，谷类",
+        "audio": "esperanto 1000基础词 一词一音/0277.mp3"
+    },
+    {
+        "word": "griza",
+        "trans": "灰色，花白",
+        "audio": "esperanto 1000基础词 一词一音/0278.mp3"
+    },
+    {
+        "word": "grupo",
+        "trans": "一群，一批",
+        "audio": "esperanto 1000基础词 一词一音/0279.mp3"
+    },
+    {
+        "word": "gusto",
+        "trans": "味，爱好",
+        "audio": "esperanto 1000基础词 一词一音/0280.mp3"
+    },
+    {
+        "word": "gvidi",
+        "trans": "领路，引导",
+        "audio": "esperanto 1000基础词 一词一音/0281.mp3"
+    },
+    {
+        "word": "ĝardeno",
+        "trans": "（花）园",
+        "audio": "esperanto 1000基础词 一词一音/0282.mp3"
+    },
+    {
+        "word": "ĝenerala",
+        "trans": "关于全体的，全面的",
+        "audio": "esperanto 1000基础词 一词一音/0283.mp3"
+    },
+    {
+        "word": "ĝeni",
+        "trans": "打扰，妨碍",
+        "audio": "esperanto 1000基础词 一词一音/0284.mp3"
+    },
+    {
+        "word": "ĝentila",
+        "trans": "彬彬有礼",
+        "audio": "esperanto 1000基础词 一词一音/0285.mp3"
+    },
+    {
+        "word": "ĝis",
+        "trans": "到…为止",
+        "audio": "esperanto 1000基础词 一词一音/0286.mp3"
+    },
+    {
+        "word": "ĝoji",
+        "trans": "高兴",
+        "audio": "esperanto 1000基础词 一词一音/0287.mp3"
+    },
+    {
+        "word": "ĝui",
+        "trans": "享受，享乐",
+        "audio": "esperanto 1000基础词 一词一音/0288.mp3"
+    },
+    {
+        "word": "ĝusta",
+        "trans": "正确，恰当",
+        "audio": "esperanto 1000基础词 一词一音/0289.mp3"
+    },
+    {
+        "word": "ha",
+        "trans": "叹词，啊、哈",
+        "audio": "esperanto 1000基础词 一词一音/0290.mp3"
+    },
+    {
+        "word": "halti",
+        "trans": "停止",
+        "audio": "esperanto 1000基础词 一词一音/0291.mp3"
+    },
+    {
+        "word": "haro",
+        "trans": "毛，发",
+        "audio": "esperanto 1000基础词 一词一音/0292.mp3"
+    },
+    {
+        "word": "haŭto",
+        "trans": "皮，皮肤",
+        "audio": "esperanto 1000基础词 一词一音/0293.mp3"
+    },
+    {
+        "word": "haveno",
+        "trans": "港口",
+        "audio": "esperanto 1000基础词 一词一音/0294.mp3"
+    },
+    {
+        "word": "havi",
+        "trans": "有",
+        "audio": "esperanto 1000基础词 一词一音/0295.mp3"
+    },
+    {
+        "word": "hejmo",
+        "trans": "家",
+        "audio": "esperanto 1000基础词 一词一音/0296.mp3"
+    },
+    {
+        "word": "hela",
+        "trans": "明亮，晴朗",
+        "audio": "esperanto 1000基础词 一词一音/0297.mp3"
+    },
+    {
+        "word": "helpi",
+        "trans": "帮助",
+        "audio": "esperanto 1000基础词 一词一音/0298.mp3"
+    },
+    {
+        "word": "herbo",
+        "trans": "草",
+        "audio": "esperanto 1000基础词 一词一音/0299.mp3"
+    },
+    {
+        "word": "hieraŭ",
+        "trans": "昨天",
+        "audio": "esperanto 1000基础词 一词一音/0300.mp3"
+    },
+    {
+        "word": "historio",
+        "trans": "历史，故事",
+        "audio": "esperanto 1000基础词 一词一音/0301.mp3"
+    },
+    {
+        "word": "ho",
+        "trans": "啊！呀！（表惊讶，恐怖",
+        "audio": "esperanto 1000基础词 一词一音/0302.mp3"
+    },
+    {
+        "word": "hodiaŭ",
+        "trans": "今天",
+        "audio": "esperanto 1000基础词 一词一音/0303.mp3"
+    },
+    {
+        "word": "homo",
+        "trans": "人",
+        "audio": "esperanto 1000基础词 一词一音/0304.mp3"
+    },
+    {
+        "word": "horloĝo",
+        "trans": "钟，表",
+        "audio": "esperanto 1000基础词 一词一音/0305.mp3"
+    },
+    {
+        "word": "horo",
+        "trans": "小时，时刻",
+        "audio": "esperanto 1000基础词 一词一音/0306.mp3"
+    },
+    {
+        "word": "hotelo",
+        "trans": "旅馆，饭店",
+        "audio": "esperanto 1000基础词 一词一音/0307.mp3"
+    },
+    {
+        "word": "hundo",
+        "trans": "狗",
+        "audio": "esperanto 1000基础词 一词一音/0308.mp3"
+    },
+    {
+        "word": "i",
+        "trans": "[词尾]动词不定式",
+        "audio": "esperanto 1000基础词 一词一音/0309.mp3"
+    },
+    {
+        "word": "ia",
+        "trans": "某种的，某类的",
+        "audio": "esperanto 1000基础词 一词一音/0310.mp3"
+    },
+    {
+        "word": "iam",
+        "trans": "某时，任何时候",
+        "audio": "esperanto 1000基础词 一词一音/0311.mp3"
+    },
+    {
+        "word": "id",
+        "trans": "后代，幼者",
+        "audio": "esperanto 1000基础词 一词一音/0312.mp3"
+    },
+    {
+        "word": "idealo",
+        "trans": "理想，崇高目标",
+        "audio": "esperanto 1000基础词 一词一音/0313.mp3"
+    },
+    {
+        "word": "ideo",
+        "trans": "观念，主意",
+        "audio": "esperanto 1000基础词 一词一音/0314.mp3"
+    },
+    {
+        "word": "ie",
+        "trans": "某处，在某处",
+        "audio": "esperanto 1000基础词 一词一音/0315.mp3"
+    },
+    {
+        "word": "iel",
+        "trans": "用某种方法",
+        "audio": "esperanto 1000基础词 一词一音/0316.mp3"
+    },
+    {
+        "word": "ig",
+        "trans": "使之…",
+        "audio": "esperanto 1000基础词 一词一音/0317.mp3"
+    },
+    {
+        "word": "iĝ",
+        "trans": "变成…",
+        "audio": "esperanto 1000基础词 一词一音/0318.mp3"
+    },
+    {
+        "word": "il",
+        "trans": "工具",
+        "audio": "esperanto 1000基础词 一词一音/0319.mp3"
+    },
+    {
+        "word": "ili",
+        "trans": "他（她、它）们",
+        "audio": "esperanto 1000基础词 一词一音/0320.mp3"
+    },
+    {
+        "word": "imagi",
+        "trans": "想象，设想",
+        "audio": "esperanto 1000基础词 一词一音/0321.mp3"
+    },
+    {
+        "word": "imiti",
+        "trans": "摹仿，仿效",
+        "audio": "esperanto 1000基础词 一词一音/0322.mp3"
+    },
+    {
+        "word": "in",
+        "trans": "表示女性、雌性",
+        "audio": "esperanto 1000基础词 一词一音/0323.mp3"
+    },
+    {
+        "word": "ind",
+        "trans": "表示值得的，值得",
+        "audio": "esperanto 1000基础词 一词一音/0324.mp3"
+    },
+    {
+        "word": "industrio",
+        "trans": "工业，产业",
+        "audio": "esperanto 1000基础词 一词一音/0325.mp3"
+    },
+    {
+        "word": "infano",
+        "trans": "幼儿，儿童",
+        "audio": "esperanto 1000基础词 一词一音/0326.mp3"
+    },
+    {
+        "word": "informi",
+        "trans": "通知，告诉",
+        "audio": "esperanto 1000基础词 一词一音/0327.mp3"
+    },
+    {
+        "word": "insekto",
+        "trans": "昆虫",
+        "audio": "esperanto 1000基础词 一词一音/0328.mp3"
+    },
+    {
+        "word": "insigno",
+        "trans": "徽章",
+        "audio": "esperanto 1000基础词 一词一音/0329.mp3"
+    },
+    {
+        "word": "instrui",
+        "trans": "教，教导",
+        "audio": "esperanto 1000基础词 一词一音/0330.mp3"
+    },
+    {
+        "word": "insulo",
+        "trans": "岛",
+        "audio": "esperanto 1000基础词 一词一音/0331.mp3"
+    },
+    {
+        "word": "int",
+        "trans": "主动过去分词（完成体）",
+        "audio": "esperanto 1000基础词 一词一音/0332.mp3"
+    },
+    {
+        "word": "inteligenta",
+        "trans": "理解力强，聪明",
+        "audio": "esperanto 1000基础词 一词一音/0333.mp3"
+    },
+    {
+        "word": "intenci",
+        "trans": "想，打算",
+        "audio": "esperanto 1000基础词 一词一音/0334.mp3"
+    },
+    {
+        "word": "inter",
+        "trans": "在…之间",
+        "audio": "esperanto 1000基础词 一词一音/0335.mp3"
+    },
+    {
+        "word": "interesi",
+        "trans": "使发生兴趣",
+        "audio": "esperanto 1000基础词 一词一音/0336.mp3"
+    },
+    {
+        "word": "interna",
+        "trans": "内部，内在",
+        "audio": "esperanto 1000基础词 一词一音/0337.mp3"
+    },
+    {
+        "word": "inviti",
+        "trans": "邀请",
+        "audio": "esperanto 1000基础词 一词一音/0338.mp3"
+    },
+    {
+        "word": "io",
+        "trans": "某物，某事",
+        "audio": "esperanto 1000基础词 一词一音/0339.mp3"
+    },
+    {
+        "word": "iri",
+        "trans": "去，走",
+        "audio": "esperanto 1000基础词 一词一音/0340.mp3"
+    },
+    {
+        "word": "is",
+        "trans": "[词尾]直陈式过去时",
+        "audio": "esperanto 1000基础词 一词一音/0341.mp3"
+    },
+    {
+        "word": "ism",
+        "trans": "主义，学说",
+        "audio": "esperanto 1000基础词 一词一音/0342.mp3"
+    },
+    {
+        "word": "ist",
+        "trans": "…者，…家",
+        "audio": "esperanto 1000基础词 一词一音/0343.mp3"
+    },
+    {
+        "word": "it",
+        "trans": "被动过去分词（完成体）",
+        "audio": "esperanto 1000基础词 一词一音/0344.mp3"
+    },
+    {
+        "word": "j",
+        "trans": "[词尾]复数",
+        "audio": "esperanto 1000基础词 一词一音/0345.mp3"
+    },
+    {
+        "word": "ja",
+        "trans": "确实，诚然",
+        "audio": "esperanto 1000基础词 一词一音/0346.mp3"
+    },
+    {
+        "word": "jam",
+        "trans": "已经",
+        "audio": "esperanto 1000基础词 一词一音/0347.mp3"
+    },
+    {
+        "word": "januaro",
+        "trans": "一月",
+        "audio": "esperanto 1000基础词 一词一音/0348.mp3"
+    },
+    {
+        "word": "jaro",
+        "trans": "年",
+        "audio": "esperanto 1000基础词 一词一音/0349.mp3"
+    },
+    {
+        "word": "je",
+        "trans": "通用介词",
+        "audio": "esperanto 1000基础词 一词一音/0350.mp3"
+    },
+    {
+        "word": "jen",
+        "trans": "（用以引起注意）[jen…jen…]一会儿…，一会儿…",
+        "audio": "esperanto 1000基础词 一词一音/0351.mp3"
+    },
+    {
+        "word": "jes",
+        "trans": "是，对",
+        "audio": "esperanto 1000基础词 一词一音/0352.mp3"
+    },
+    {
+        "word": "juĝi",
+        "trans": "审判，判断",
+        "audio": "esperanto 1000基础词 一词一音/0353.mp3"
+    },
+    {
+        "word": "julio",
+        "trans": "七月",
+        "audio": "esperanto 1000基础词 一词一音/0354.mp3"
+    },
+    {
+        "word": "juna",
+        "trans": "年轻",
+        "audio": "esperanto 1000基础词 一词一音/0355.mp3"
+    },
+    {
+        "word": "junio",
+        "trans": "六月",
+        "audio": "esperanto 1000基础词 一词一音/0356.mp3"
+    },
+    {
+        "word": "jupo",
+        "trans": "裙",
+        "audio": "esperanto 1000基础词 一词一音/0357.mp3"
+    },
+    {
+        "word": "justa",
+        "trans": "公正，公平",
+        "audio": "esperanto 1000基础词 一词一音/0358.mp3"
+    },
+    {
+        "word": "ĵaŭdo",
+        "trans": "星期四",
+        "audio": "esperanto 1000基础词 一词一音/0359.mp3"
+    },
+    {
+        "word": "ĵeti",
+        "trans": "扔，抛",
+        "audio": "esperanto 1000基础词 一词一音/0360.mp3"
+    },
+    {
+        "word": "ĵus",
+        "trans": "刚才，刚刚",
+        "audio": "esperanto 1000基础词 一词一音/0361.mp3"
+    },
+    {
+        "word": "kadro",
+        "trans": "边框，环境",
+        "audio": "esperanto 1000基础词 一词一音/0362.mp3"
+    },
+    {
+        "word": "kafo",
+        "trans": "咖啡",
+        "audio": "esperanto 1000基础词 一词一音/0363.mp3"
+    },
+    {
+        "word": "kaj",
+        "trans": "和",
+        "audio": "esperanto 1000基础词 一词一音/0364.mp3"
+    },
+    {
+        "word": "kajero",
+        "trans": "笔记本，练习本",
+        "audio": "esperanto 1000基础词 一词一音/0365.mp3"
+    },
+    {
+        "word": "kalendaro",
+        "trans": "历法，日历",
+        "audio": "esperanto 1000基础词 一词一音/0366.mp3"
+    },
+    {
+        "word": "kalkuli",
+        "trans": "数数，计算",
+        "audio": "esperanto 1000基础词 一词一音/0367.mp3"
+    },
+    {
+        "word": "kampo",
+        "trans": "田地",
+        "audio": "esperanto 1000基础词 一词一音/0368.mp3"
+    },
+    {
+        "word": "kanti",
+        "trans": "唱",
+        "audio": "esperanto 1000基础词 一词一音/0369.mp3"
+    },
+    {
+        "word": "kapabla",
+        "trans": "有能力的，能够…的",
+        "audio": "esperanto 1000基础词 一词一音/0370.mp3"
+    },
+    {
+        "word": "kapo",
+        "trans": "头",
+        "audio": "esperanto 1000基础词 一词一音/0371.mp3"
+    },
+    {
+        "word": "kapti",
+        "trans": "捉，抓住",
+        "audio": "esperanto 1000基础词 一词一音/0372.mp3"
+    },
+    {
+        "word": "kara",
+        "trans": "亲爱的，珍贵",
+        "audio": "esperanto 1000基础词 一词一音/0373.mp3"
+    },
+    {
+        "word": "karbo",
+        "trans": "煤，炭",
+        "audio": "esperanto 1000基础词 一词一音/0374.mp3"
+    },
+    {
+        "word": "karto",
+        "trans": "卡片，证件",
+        "audio": "esperanto 1000基础词 一词一音/0375.mp3"
+    },
+    {
+        "word": "kasedo",
+        "trans": "卡式磁带，录音带",
+        "audio": "esperanto 1000基础词 一词一音/0376.mp3"
+    },
+    {
+        "word": "kaŝi",
+        "trans": "藏",
+        "audio": "esperanto 1000基础词 一词一音/0377.mp3"
+    },
+    {
+        "word": "kato",
+        "trans": "猫",
+        "audio": "esperanto 1000基础词 一词一音/0378.mp3"
+    },
+    {
+        "word": "kaŭzo",
+        "trans": "原因",
+        "audio": "esperanto 1000基础词 一词一音/0379.mp3"
+    },
+    {
+        "word": "kazo",
+        "trans": "格，案情",
+        "audio": "esperanto 1000基础词 一词一音/0380.mp3"
+    },
+    {
+        "word": "ke",
+        "trans": "[连]（引起从句）",
+        "audio": "esperanto 1000基础词 一词一音/0381.mp3"
+    },
+    {
+        "word": "kelka",
+        "trans": "一些，[~aj]几个（人）",
+        "audio": "esperanto 1000基础词 一词一音/0382.mp3"
+    },
+    {
+        "word": "kia",
+        "trans": "什么样的",
+        "audio": "esperanto 1000基础词 一词一音/0383.mp3"
+    },
+    {
+        "word": "kial",
+        "trans": "为什么",
+        "audio": "esperanto 1000基础词 一词一音/0384.mp3"
+    },
+    {
+        "word": "kiam",
+        "trans": "什么时候，[连]当…时候",
+        "audio": "esperanto 1000基础词 一词一音/0385.mp3"
+    },
+    {
+        "word": "kie",
+        "trans": "在什么地方",
+        "audio": "esperanto 1000基础词 一词一音/0386.mp3"
+    },
+    {
+        "word": "kiel",
+        "trans": "怎样，如同",
+        "audio": "esperanto 1000基础词 一词一音/0387.mp3"
+    },
+    {
+        "word": "kies",
+        "trans": "谁的",
+        "audio": "esperanto 1000基础词 一词一音/0388.mp3"
+    },
+    {
+        "word": "kilogramo",
+        "trans": "千克",
+        "audio": "esperanto 1000基础词 一词一音/0389.mp3"
+    },
+    {
+        "word": "kilometro",
+        "trans": "千米",
+        "audio": "esperanto 1000基础词 一词一音/0390.mp3"
+    },
+    {
+        "word": "kio",
+        "trans": "什么",
+        "audio": "esperanto 1000基础词 一词一音/0391.mp3"
+    },
+    {
+        "word": "kiom",
+        "trans": "多少",
+        "audio": "esperanto 1000基础词 一词一音/0392.mp3"
+    },
+    {
+        "word": "kisi",
+        "trans": "吻",
+        "audio": "esperanto 1000基础词 一词一音/0393.mp3"
+    },
+    {
+        "word": "kiu",
+        "trans": "谁，哪一个",
+        "audio": "esperanto 1000基础词 一词一音/0394.mp3"
+    },
+    {
+        "word": "klara",
+        "trans": "清楚，明亮",
+        "audio": "esperanto 1000基础词 一词一音/0395.mp3"
+    },
+    {
+        "word": "klaso",
+        "trans": "阶级，班级",
+        "audio": "esperanto 1000基础词 一词一音/0396.mp3"
+    },
+    {
+        "word": "klini",
+        "trans": "使倾斜，使弯曲",
+        "audio": "esperanto 1000基础词 一词一音/0397.mp3"
+    },
+    {
+        "word": "klopodi",
+        "trans": "尽力，忙碌",
+        "audio": "esperanto 1000基础词 一词一音/0398.mp3"
+    },
+    {
+        "word": "klubo",
+        "trans": "俱乐部，联谊会",
+        "audio": "esperanto 1000基础词 一词一音/0399.mp3"
+    },
+    {
+        "word": "knabo",
+        "trans": "男孩",
+        "audio": "esperanto 1000基础词 一词一音/0400.mp3"
+    },
+    {
+        "word": "kolekti",
+        "trans": "召集，收集",
+        "audio": "esperanto 1000基础词 一词一音/0401.mp3"
+    },
+    {
+        "word": "koleri",
+        "trans": "发怒",
+        "audio": "esperanto 1000基础词 一词一音/0402.mp3"
+    },
+    {
+        "word": "kolo",
+        "trans": "颈，脖子",
+        "audio": "esperanto 1000基础词 一词一音/0403.mp3"
+    },
+    {
+        "word": "koloro",
+        "trans": "颜色",
+        "audio": "esperanto 1000基础词 一词一音/0404.mp3"
+    },
+    {
+        "word": "kombi",
+        "trans": "梳，梳头",
+        "audio": "esperanto 1000基础词 一词一音/0405.mp3"
+    },
+    {
+        "word": "komenci",
+        "trans": "开始",
+        "audio": "esperanto 1000基础词 一词一音/0406.mp3"
+    },
+    {
+        "word": "komerci",
+        "trans": "经商，做买卖",
+        "audio": "esperanto 1000基础词 一词一音/0407.mp3"
+    },
+    {
+        "word": "komforta",
+        "trans": "舒服，安逸",
+        "audio": "esperanto 1000基础词 一词一音/0408.mp3"
+    },
+    {
+        "word": "komisii",
+        "trans": "委托，委任",
+        "audio": "esperanto 1000基础词 一词一音/0409.mp3"
+    },
+    {
+        "word": "komitato",
+        "trans": "委员会",
+        "audio": "esperanto 1000基础词 一词一音/0410.mp3"
+    },
+    {
+        "word": "kompari",
+        "trans": "比较，对比",
+        "audio": "esperanto 1000基础词 一词一音/0411.mp3"
+    },
+    {
+        "word": "kompati",
+        "trans": "怜悯，同情",
+        "audio": "esperanto 1000基础词 一词一音/0412.mp3"
+    },
+    {
+        "word": "kompreni",
+        "trans": "理解",
+        "audio": "esperanto 1000基础词 一词一音/0413.mp3"
+    },
+    {
+        "word": "komputi",
+        "trans": "计算，估计",
+        "audio": "esperanto 1000基础词 一词一音/0414.mp3"
+    },
+    {
+        "word": "komuna",
+        "trans": "公共，共同",
+        "audio": "esperanto 1000基础词 一词一音/0415.mp3"
+    },
+    {
+        "word": "komuniki",
+        "trans": "告知，传染",
+        "audio": "esperanto 1000基础词 一词一音/0416.mp3"
+    },
+    {
+        "word": "koncerni",
+        "trans": "涉及，关系到",
+        "audio": "esperanto 1000基础词 一词一音/0417.mp3"
+    },
+    {
+        "word": "kondiĉo",
+        "trans": "（必要的）条件，条款",
+        "audio": "esperanto 1000基础词 一词一音/0418.mp3"
+    },
+    {
+        "word": "konduki",
+        "trans": "带领，引领",
+        "audio": "esperanto 1000基础词 一词一音/0419.mp3"
+    },
+    {
+        "word": "konfesi",
+        "trans": "公开表明，直言不讳",
+        "audio": "esperanto 1000基础词 一词一音/0420.mp3"
+    },
+    {
+        "word": "kongreso",
+        "trans": "（代表）大会",
+        "audio": "esperanto 1000基础词 一词一音/0421.mp3"
+    },
+    {
+        "word": "koni",
+        "trans": "知道，认识",
+        "audio": "esperanto 1000基础词 一词一音/0422.mp3"
+    },
+    {
+        "word": "konkreta",
+        "trans": "具体的",
+        "audio": "esperanto 1000基础词 一词一音/0423.mp3"
+    },
+    {
+        "word": "konsenti",
+        "trans": "同意",
+        "audio": "esperanto 1000基础词 一词一音/0424.mp3"
+    },
+    {
+        "word": "konservi",
+        "trans": "保存，保持",
+        "audio": "esperanto 1000基础词 一词一音/0425.mp3"
+    },
+    {
+        "word": "konsideri",
+        "trans": "考虑，把…看作…",
+        "audio": "esperanto 1000基础词 一词一音/0426.mp3"
+    },
+    {
+        "word": "konsili",
+        "trans": "劝告（应做某事）",
+        "audio": "esperanto 1000基础词 一词一音/0427.mp3"
+    },
+    {
+        "word": "konsisti",
+        "trans": "由…组成，包含",
+        "audio": "esperanto 1000基础词 一词一音/0428.mp3"
+    },
+    {
+        "word": "konstanta",
+        "trans": "恒定，不变",
+        "audio": "esperanto 1000基础词 一词一音/0429.mp3"
+    },
+    {
+        "word": "konstrui",
+        "trans": "建筑，构成",
+        "audio": "esperanto 1000基础词 一词一音/0430.mp3"
+    },
+    {
+        "word": "kontakto",
+        "trans": "接触，往来",
+        "audio": "esperanto 1000基础词 一词一音/0431.mp3"
+    },
+    {
+        "word": "kontenta",
+        "trans": "满意，满足",
+        "audio": "esperanto 1000基础词 一词一音/0432.mp3"
+    },
+    {
+        "word": "kontraŭ",
+        "trans": "对着，向着",
+        "audio": "esperanto 1000基础词 一词一音/0433.mp3"
+    },
+    {
+        "word": "kontroli",
+        "trans": "检查，检验",
+        "audio": "esperanto 1000基础词 一词一音/0434.mp3"
+    },
+    {
+        "word": "konveni",
+        "trans": "合适，适宜",
+        "audio": "esperanto 1000基础词 一词一音/0435.mp3"
+    },
+    {
+        "word": "konvinki",
+        "trans": "说服，使信服",
+        "audio": "esperanto 1000基础词 一词一音/0436.mp3"
+    },
+    {
+        "word": "kopii",
+        "trans": "抄写，复写",
+        "audio": "esperanto 1000基础词 一词一音/0437.mp3"
+    },
+    {
+        "word": "korbo",
+        "trans": "篮，筐",
+        "audio": "esperanto 1000基础词 一词一音/0438.mp3"
+    },
+    {
+        "word": "korespondi",
+        "trans": "通信",
+        "audio": "esperanto 1000基础词 一词一音/0439.mp3"
+    },
+    {
+        "word": "koro",
+        "trans": "心",
+        "audio": "esperanto 1000基础词 一词一音/0440.mp3"
+    },
+    {
+        "word": "korpo",
+        "trans": "身体，体",
+        "audio": "esperanto 1000基础词 一词一音/0441.mp3"
+    },
+    {
+        "word": "korto",
+        "trans": "庭院",
+        "audio": "esperanto 1000基础词 一词一音/0442.mp3"
+    },
+    {
+        "word": "kosti",
+        "trans": "值",
+        "audio": "esperanto 1000基础词 一词一音/0443.mp3"
+    },
+    {
+        "word": "kostumo",
+        "trans": "服装，服装样式",
+        "audio": "esperanto 1000基础词 一词一音/0444.mp3"
+    },
+    {
+        "word": "koverto",
+        "trans": "信封",
+        "audio": "esperanto 1000基础词 一词一音/0445.mp3"
+    },
+    {
+        "word": "kovri",
+        "trans": "盖",
+        "audio": "esperanto 1000基础词 一词一音/0446.mp3"
+    },
+    {
+        "word": "krajono",
+        "trans": "铅笔",
+        "audio": "esperanto 1000基础词 一词一音/0447.mp3"
+    },
+    {
+        "word": "kredi",
+        "trans": "相信",
+        "audio": "esperanto 1000基础词 一词一音/0448.mp3"
+    },
+    {
+        "word": "krei",
+        "trans": "创造，开创",
+        "audio": "esperanto 1000基础词 一词一音/0449.mp3"
+    },
+    {
+        "word": "kreski",
+        "trans": "生长",
+        "audio": "esperanto 1000基础词 一词一音/0450.mp3"
+    },
+    {
+        "word": "krii",
+        "trans": "喊",
+        "audio": "esperanto 1000基础词 一词一音/0451.mp3"
+    },
+    {
+        "word": "krom",
+        "trans": "除了",
+        "audio": "esperanto 1000基础词 一词一音/0452.mp3"
+    },
+    {
+        "word": "kruela",
+        "trans": "残忍，残暴",
+        "audio": "esperanto 1000基础词 一词一音/0453.mp3"
+    },
+    {
+        "word": "kruro",
+        "trans": "小腿，腿",
+        "audio": "esperanto 1000基础词 一词一音/0454.mp3"
+    },
+    {
+        "word": "kudri",
+        "trans": "缝",
+        "audio": "esperanto 1000基础词 一词一音/0455.mp3"
+    },
+    {
+        "word": "kuiri",
+        "trans": "煮，烧",
+        "audio": "esperanto 1000基础词 一词一音/0456.mp3"
+    },
+    {
+        "word": "kuko",
+        "trans": "糕点",
+        "audio": "esperanto 1000基础词 一词一音/0457.mp3"
+    },
+    {
+        "word": "kulero",
+        "trans": "汤匙",
+        "audio": "esperanto 1000基础词 一词一音/0458.mp3"
+    },
+    {
+        "word": "kulpa",
+        "trans": "有罪的，犯罪的",
+        "audio": "esperanto 1000基础词 一词一音/0459.mp3"
+    },
+    {
+        "word": "kulturi",
+        "trans": "耕种，栽培",
+        "audio": "esperanto 1000基础词 一词一音/0460.mp3"
+    },
+    {
+        "word": "kun",
+        "trans": "和…一起",
+        "audio": "esperanto 1000基础词 一词一音/0461.mp3"
+    },
+    {
+        "word": "kupono",
+        "trans": "息票，联单",
+        "audio": "esperanto 1000基础词 一词一音/0462.mp3"
+    },
+    {
+        "word": "kuraci",
+        "trans": "治疗",
+        "audio": "esperanto 1000基础词 一词一音/0463.mp3"
+    },
+    {
+        "word": "kuraĝa",
+        "trans": "勇敢",
+        "audio": "esperanto 1000基础词 一词一音/0464.mp3"
+    },
+    {
+        "word": "kuri",
+        "trans": "跑",
+        "audio": "esperanto 1000基础词 一词一音/0465.mp3"
+    },
+    {
+        "word": "kurso",
+        "trans": "课程，讲习班",
+        "audio": "esperanto 1000基础词 一词一音/0466.mp3"
+    },
+    {
+        "word": "kuŝi",
+        "trans": "躺",
+        "audio": "esperanto 1000基础词 一词一音/0467.mp3"
+    },
+    {
+        "word": "kutimi",
+        "trans": "习惯于",
+        "audio": "esperanto 1000基础词 一词一音/0468.mp3"
+    },
+    {
+        "word": "kuzo",
+        "trans": "堂（表）兄弟",
+        "audio": "esperanto 1000基础词 一词一音/0469.mp3"
+    },
+    {
+        "word": "kvadrato",
+        "trans": "正方形，平方",
+        "audio": "esperanto 1000基础词 一词一音/0470.mp3"
+    },
+    {
+        "word": "kvalito",
+        "trans": "特质，性质",
+        "audio": "esperanto 1000基础词 一词一音/0471.mp3"
+    },
+    {
+        "word": "kvankam",
+        "trans": "虽然，尽管",
+        "audio": "esperanto 1000基础词 一词一音/0472.mp3"
+    },
+    {
+        "word": "kvanto",
+        "trans": "量，数量",
+        "audio": "esperanto 1000基础词 一词一音/0473.mp3"
+    },
+    {
+        "word": "kvar",
+        "trans": "四",
+        "audio": "esperanto 1000基础词 一词一音/0474.mp3"
+    },
+    {
+        "word": "kvazaŭ",
+        "trans": "好象，仿佛",
+        "audio": "esperanto 1000基础词 一词一音/0475.mp3"
+    },
+    {
+        "word": "kvin",
+        "trans": "五",
+        "audio": "esperanto 1000基础词 一词一音/0476.mp3"
+    },
+    {
+        "word": "la",
+        "trans": "[定冠词]",
+        "audio": "esperanto 1000基础词 一词一音/0477.mp3"
+    },
+    {
+        "word": "labori",
+        "trans": "工作，劳动",
+        "audio": "esperanto 1000基础词 一词一音/0478.mp3"
+    },
+    {
+        "word": "laca",
+        "trans": "疲劳，累",
+        "audio": "esperanto 1000基础词 一词一音/0479.mp3"
+    },
+    {
+        "word": "lago",
+        "trans": "湖",
+        "audio": "esperanto 1000基础词 一词一音/0480.mp3"
+    },
+    {
+        "word": "lakto",
+        "trans": "奶，乳汁",
+        "audio": "esperanto 1000基础词 一词一音/0481.mp3"
+    },
+    {
+        "word": "lando",
+        "trans": "国家，国土",
+        "audio": "esperanto 1000基础词 一词一音/0482.mp3"
+    },
+    {
+        "word": "lango",
+        "trans": "舌头，口才",
+        "audio": "esperanto 1000基础词 一词一音/0483.mp3"
+    },
+    {
+        "word": "larĝa",
+        "trans": "宽，宽阔",
+        "audio": "esperanto 1000基础词 一词一音/0484.mp3"
+    },
+    {
+        "word": "lasi",
+        "trans": "留下，丢下",
+        "audio": "esperanto 1000基础词 一词一音/0485.mp3"
+    },
+    {
+        "word": "lasta",
+        "trans": "最后，最近",
+        "audio": "esperanto 1000基础词 一词一音/0486.mp3"
+    },
+    {
+        "word": "laŭ",
+        "trans": "沿着，按照",
+        "audio": "esperanto 1000基础词 一词一音/0487.mp3"
+    },
+    {
+        "word": "lavi",
+        "trans": "洗",
+        "audio": "esperanto 1000基础词 一词一音/0488.mp3"
+    },
+    {
+        "word": "leciono",
+        "trans": "课，功课",
+        "audio": "esperanto 1000基础词 一词一音/0489.mp3"
+    },
+    {
+        "word": "legi",
+        "trans": "读",
+        "audio": "esperanto 1000基础词 一词一音/0490.mp3"
+    },
+    {
+        "word": "legomo",
+        "trans": "蔬菜",
+        "audio": "esperanto 1000基础词 一词一音/0491.mp3"
+    },
+    {
+        "word": "leĝo",
+        "trans": "法律，准则",
+        "audio": "esperanto 1000基础词 一词一音/0492.mp3"
+    },
+    {
+        "word": "lerni",
+        "trans": "学，学会",
+        "audio": "esperanto 1000基础词 一词一音/0493.mp3"
+    },
+    {
+        "word": "lerta",
+        "trans": "灵巧，熟练",
+        "audio": "esperanto 1000基础词 一词一音/0494.mp3"
+    },
+    {
+        "word": "letero",
+        "trans": "信",
+        "audio": "esperanto 1000基础词 一词一音/0495.mp3"
+    },
+    {
+        "word": "levi",
+        "trans": "（举、抬、提）起，提高",
+        "audio": "esperanto 1000基础词 一词一音/0496.mp3"
+    },
+    {
+        "word": "li",
+        "trans": "他",
+        "audio": "esperanto 1000基础词 一词一音/0497.mp3"
+    },
+    {
+        "word": "libera",
+        "trans": "自由",
+        "audio": "esperanto 1000基础词 一词一音/0498.mp3"
+    },
+    {
+        "word": "libro",
+        "trans": "书，簿",
+        "audio": "esperanto 1000基础词 一词一音/0499.mp3"
+    },
+    {
+        "word": "ligi",
+        "trans": "绑，连",
+        "audio": "esperanto 1000基础词 一词一音/0500.mp3"
+    },
+    {
+        "word": "ligno",
+        "trans": "木质部，木材",
+        "audio": "esperanto 1000基础词 一词一音/0501.mp3"
+    },
+    {
+        "word": "limo",
+        "trans": "分界线，范围",
+        "audio": "esperanto 1000基础词 一词一音/0502.mp3"
+    },
+    {
+        "word": "lingvo",
+        "trans": "语言",
+        "audio": "esperanto 1000基础词 一词一音/0503.mp3"
+    },
+    {
+        "word": "linio",
+        "trans": "线",
+        "audio": "esperanto 1000基础词 一词一音/0504.mp3"
+    },
+    {
+        "word": "lipo",
+        "trans": "唇",
+        "audio": "esperanto 1000基础词 一词一音/0505.mp3"
+    },
+    {
+        "word": "listo",
+        "trans": "表，目录",
+        "audio": "esperanto 1000基础词 一词一音/0506.mp3"
+    },
+    {
+        "word": "literaturo",
+        "trans": "文学，关于某个问题的全部文献",
+        "audio": "esperanto 1000基础词 一词一音/0507.mp3"
+    },
+    {
+        "word": "litero",
+        "trans": "字母",
+        "audio": "esperanto 1000基础词 一词一音/0508.mp3"
+    },
+    {
+        "word": "lito",
+        "trans": "床",
+        "audio": "esperanto 1000基础词 一词一音/0509.mp3"
+    },
+    {
+        "word": "loĝi",
+        "trans": "居住",
+        "audio": "esperanto 1000基础词 一词一音/0510.mp3"
+    },
+    {
+        "word": "loko",
+        "trans": "地点，处所",
+        "audio": "esperanto 1000基础词 一词一音/0511.mp3"
+    },
+    {
+        "word": "longa",
+        "trans": "长",
+        "audio": "esperanto 1000基础词 一词一音/0512.mp3"
+    },
+    {
+        "word": "ludi",
+        "trans": "玩，游戏",
+        "audio": "esperanto 1000基础词 一词一音/0513.mp3"
+    },
+    {
+        "word": "lumo",
+        "trans": "光明，光亮",
+        "audio": "esperanto 1000基础词 一词一音/0514.mp3"
+    },
+    {
+        "word": "lundo",
+        "trans": "星期一",
+        "audio": "esperanto 1000基础词 一词一音/0515.mp3"
+    },
+    {
+        "word": "luno",
+        "trans": "月亮",
+        "audio": "esperanto 1000基础词 一词一音/0516.mp3"
+    },
+    {
+        "word": "majo",
+        "trans": "五月",
+        "audio": "esperanto 1000基础词 一词一音/0517.mp3"
+    },
+    {
+        "word": "mal",
+        "trans": "反",
+        "audio": "esperanto 1000基础词 一词一音/0518.mp3"
+    },
+    {
+        "word": "manĝi",
+        "trans": "吃",
+        "audio": "esperanto 1000基础词 一词一音/0519.mp3"
+    },
+    {
+        "word": "maniero",
+        "trans": "方法，作风",
+        "audio": "esperanto 1000基础词 一词一音/0520.mp3"
+    },
+    {
+        "word": "manki",
+        "trans": "缺少",
+        "audio": "esperanto 1000基础词 一词一音/0521.mp3"
+    },
+    {
+        "word": "mano",
+        "trans": "手",
+        "audio": "esperanto 1000基础词 一词一音/0522.mp3"
+    },
+    {
+        "word": "mantelo",
+        "trans": "披风，斗篷",
+        "audio": "esperanto 1000基础词 一词一音/0523.mp3"
+    },
+    {
+        "word": "mardo",
+        "trans": "星期二",
+        "audio": "esperanto 1000基础词 一词一音/0524.mp3"
+    },
+    {
+        "word": "marko",
+        "trans": "记号，商标",
+        "audio": "esperanto 1000基础词 一词一音/0525.mp3"
+    },
+    {
+        "word": "maro",
+        "trans": "海",
+        "audio": "esperanto 1000基础词 一词一音/0526.mp3"
+    },
+    {
+        "word": "marŝi",
+        "trans": "行进，步行",
+        "audio": "esperanto 1000基础词 一词一音/0527.mp3"
+    },
+    {
+        "word": "marto",
+        "trans": "三月",
+        "audio": "esperanto 1000基础词 一词一音/0528.mp3"
+    },
+    {
+        "word": "mastro",
+        "trans": "主人",
+        "audio": "esperanto 1000基础词 一词一音/0529.mp3"
+    },
+    {
+        "word": "maŝino",
+        "trans": "机器，机械",
+        "audio": "esperanto 1000基础词 一词一音/0530.mp3"
+    },
+    {
+        "word": "mateno",
+        "trans": "早晨",
+        "audio": "esperanto 1000基础词 一词一音/0531.mp3"
+    },
+    {
+        "word": "materialo",
+        "trans": "材料，物资",
+        "audio": "esperanto 1000基础词 一词一音/0532.mp3"
+    },
+    {
+        "word": "meblo",
+        "trans": "家具",
+        "audio": "esperanto 1000基础词 一词一音/0533.mp3"
+    },
+    {
+        "word": "medio",
+        "trans": "环境",
+        "audio": "esperanto 1000基础词 一词一音/0534.mp3"
+    },
+    {
+        "word": "mem",
+        "trans": "本人，亲自",
+        "audio": "esperanto 1000基础词 一词一音/0535.mp3"
+    },
+    {
+        "word": "membro",
+        "trans": "肢，成员",
+        "audio": "esperanto 1000基础词 一词一音/0536.mp3"
+    },
+    {
+        "word": "memoro",
+        "trans": "记忆，记忆",
+        "audio": "esperanto 1000基础词 一词一音/0537.mp3"
+    },
+    {
+        "word": "mendi",
+        "trans": "定购，预定（事后付款）",
+        "audio": "esperanto 1000基础词 一词一音/0538.mp3"
+    },
+    {
+        "word": "menso",
+        "trans": "精神，心灵",
+        "audio": "esperanto 1000基础词 一词一音/0539.mp3"
+    },
+    {
+        "word": "meriti",
+        "trans": "值得，应得",
+        "audio": "esperanto 1000基础词 一词一音/0540.mp3"
+    },
+    {
+        "word": "merkredo",
+        "trans": "星期三",
+        "audio": "esperanto 1000基础词 一词一音/0541.mp3"
+    },
+    {
+        "word": "metalo",
+        "trans": "金属",
+        "audio": "esperanto 1000基础词 一词一音/0542.mp3"
+    },
+    {
+        "word": "meti",
+        "trans": "放置",
+        "audio": "esperanto 1000基础词 一词一音/0543.mp3"
+    },
+    {
+        "word": "metodo",
+        "trans": "方法，办法",
+        "audio": "esperanto 1000基础词 一词一音/0544.mp3"
+    },
+    {
+        "word": "metro",
+        "trans": "米",
+        "audio": "esperanto 1000基础词 一词一音/0545.mp3"
+    },
+    {
+        "word": "mezo",
+        "trans": "中间",
+        "audio": "esperanto 1000基础词 一词一音/0546.mp3"
+    },
+    {
+        "word": "mezuri",
+        "trans": "量，测量",
+        "audio": "esperanto 1000基础词 一词一音/0547.mp3"
+    },
+    {
+        "word": "mi",
+        "trans": "我",
+        "audio": "esperanto 1000基础词 一词一音/0548.mp3"
+    },
+    {
+        "word": "miksi",
+        "trans": "使混合，配置",
+        "audio": "esperanto 1000基础词 一词一音/0549.mp3"
+    },
+    {
+        "word": "mil",
+        "trans": "千",
+        "audio": "esperanto 1000基础词 一词一音/0550.mp3"
+    },
+    {
+        "word": "miliono",
+        "trans": "兆（百万）",
+        "audio": "esperanto 1000基础词 一词一音/0551.mp3"
+    },
+    {
+        "word": "militi",
+        "trans": "作战",
+        "audio": "esperanto 1000基础词 一词一音/0552.mp3"
+    },
+    {
+        "word": "minus",
+        "trans": "减，负",
+        "audio": "esperanto 1000基础词 一词一音/0553.mp3"
+    },
+    {
+        "word": "minuto",
+        "trans": "分钟",
+        "audio": "esperanto 1000基础词 一词一音/0554.mp3"
+    },
+    {
+        "word": "miri",
+        "trans": "惊奇",
+        "audio": "esperanto 1000基础词 一词一音/0555.mp3"
+    },
+    {
+        "word": "moderna",
+        "trans": "现代，近代",
+        "audio": "esperanto 1000基础词 一词一音/0556.mp3"
+    },
+    {
+        "word": "moki",
+        "trans": "嘲笑，奚落",
+        "audio": "esperanto 1000基础词 一词一音/0557.mp3"
+    },
+    {
+        "word": "mola",
+        "trans": "软",
+        "audio": "esperanto 1000基础词 一词一音/0558.mp3"
+    },
+    {
+        "word": "momento",
+        "trans": "片刻，瞬间",
+        "audio": "esperanto 1000基础词 一词一音/0559.mp3"
+    },
+    {
+        "word": "monato",
+        "trans": "月，月份",
+        "audio": "esperanto 1000基础词 一词一音/0560.mp3"
+    },
+    {
+        "word": "mondo",
+        "trans": "世界",
+        "audio": "esperanto 1000基础词 一词一音/0561.mp3"
+    },
+    {
+        "word": "mono",
+        "trans": "钱",
+        "audio": "esperanto 1000基础词 一词一音/0562.mp3"
+    },
+    {
+        "word": "monto",
+        "trans": "山",
+        "audio": "esperanto 1000基础词 一词一音/0563.mp3"
+    },
+    {
+        "word": "montri",
+        "trans": "出示，指出",
+        "audio": "esperanto 1000基础词 一词一音/0564.mp3"
+    },
+    {
+        "word": "morgaŭ",
+        "trans": "明天",
+        "audio": "esperanto 1000基础词 一词一音/0565.mp3"
+    },
+    {
+        "word": "morti",
+        "trans": "死亡",
+        "audio": "esperanto 1000基础词 一词一音/0566.mp3"
+    },
+    {
+        "word": "movi",
+        "trans": "移动",
+        "audio": "esperanto 1000基础词 一词一音/0567.mp3"
+    },
+    {
+        "word": "multa",
+        "trans": "大量，许多",
+        "audio": "esperanto 1000基础词 一词一音/0568.mp3"
+    },
+    {
+        "word": "muro",
+        "trans": "墙",
+        "audio": "esperanto 1000基础词 一词一音/0569.mp3"
+    },
+    {
+        "word": "muŝo",
+        "trans": "蝇属昆虫（苍蝇）",
+        "audio": "esperanto 1000基础词 一词一音/0570.mp3"
+    },
+    {
+        "word": "muzeo",
+        "trans": "博物馆，博物院",
+        "audio": "esperanto 1000基础词 一词一音/0571.mp3"
+    },
+    {
+        "word": "muziko",
+        "trans": "音乐",
+        "audio": "esperanto 1000基础词 一词一音/0572.mp3"
+    },
+    {
+        "word": "n",
+        "trans": "[词尾]宾格",
+        "audio": "esperanto 1000基础词 一词一音/0573.mp3"
+    },
+    {
+        "word": "nacio",
+        "trans": "民族，国家",
+        "audio": "esperanto 1000基础词 一词一音/0574.mp3"
+    },
+    {
+        "word": "naĝi",
+        "trans": "游，漂",
+        "audio": "esperanto 1000基础词 一词一音/0575.mp3"
+    },
+    {
+        "word": "naski",
+        "trans": "生育",
+        "audio": "esperanto 1000基础词 一词一音/0576.mp3"
+    },
+    {
+        "word": "naturo",
+        "trans": "自然，本性",
+        "audio": "esperanto 1000基础词 一词一音/0577.mp3"
+    },
+    {
+        "word": "naŭ",
+        "trans": "九",
+        "audio": "esperanto 1000基础词 一词一音/0578.mp3"
+    },
+    {
+        "word": "nazo",
+        "trans": "鼻子",
+        "audio": "esperanto 1000基础词 一词一音/0579.mp3"
+    },
+    {
+        "word": "ne",
+        "trans": "不，没有",
+        "audio": "esperanto 1000基础词 一词一音/0580.mp3"
+    },
+    {
+        "word": "nebulo",
+        "trans": "雾",
+        "audio": "esperanto 1000基础词 一词一音/0581.mp3"
+    },
+    {
+        "word": "necesa",
+        "trans": "必需，必然",
+        "audio": "esperanto 1000基础词 一词一音/0582.mp3"
+    },
+    {
+        "word": "neĝo",
+        "trans": "雪",
+        "audio": "esperanto 1000基础词 一词一音/0583.mp3"
+    },
+    {
+        "word": "nek",
+        "trans": "也不",
+        "audio": "esperanto 1000基础词 一词一音/0584.mp3"
+    },
+    {
+        "word": "nenia",
+        "trans": "什么样的…也没有",
+        "audio": "esperanto 1000基础词 一词一音/0585.mp3"
+    },
+    {
+        "word": "neniam",
+        "trans": "从来没有，永不",
+        "audio": "esperanto 1000基础词 一词一音/0586.mp3"
+    },
+    {
+        "word": "nenie",
+        "trans": "没有一处",
+        "audio": "esperanto 1000基础词 一词一音/0587.mp3"
+    },
+    {
+        "word": "neniel",
+        "trans": "怎样也不，绝不",
+        "audio": "esperanto 1000基础词 一词一音/0588.mp3"
+    },
+    {
+        "word": "nenio",
+        "trans": "没有什么东西，没有什么事情",
+        "audio": "esperanto 1000基础词 一词一音/0589.mp3"
+    },
+    {
+        "word": "nepo",
+        "trans": "（外）孙",
+        "audio": "esperanto 1000基础词 一词一音/0590.mp3"
+    },
+    {
+        "word": "nepre",
+        "trans": "一定地，非…不可",
+        "audio": "esperanto 1000基础词 一词一音/0591.mp3"
+    },
+    {
+        "word": "neŭtrala",
+        "trans": "中立的",
+        "audio": "esperanto 1000基础词 一词一音/0592.mp3"
+    },
+    {
+        "word": "nevo",
+        "trans": "侄子，外甥",
+        "audio": "esperanto 1000基础词 一词一音/0593.mp3"
+    },
+    {
+        "word": "ni",
+        "trans": "我们",
+        "audio": "esperanto 1000基础词 一词一音/0594.mp3"
+    },
+    {
+        "word": "nigra",
+        "trans": "黑色，黑暗",
+        "audio": "esperanto 1000基础词 一词一音/0595.mp3"
+    },
+    {
+        "word": "nivelo",
+        "trans": "水平面，标高",
+        "audio": "esperanto 1000基础词 一词一音/0596.mp3"
+    },
+    {
+        "word": "nokto",
+        "trans": "夜，夜间",
+        "audio": "esperanto 1000基础词 一词一音/0597.mp3"
+    },
+    {
+        "word": "nombro",
+        "trans": "数（目），编号",
+        "audio": "esperanto 1000基础词 一词一音/0598.mp3"
+    },
+    {
+        "word": "nomo",
+        "trans": "名字",
+        "audio": "esperanto 1000基础词 一词一音/0599.mp3"
+    },
+    {
+        "word": "nordo",
+        "trans": "北，北方",
+        "audio": "esperanto 1000基础词 一词一音/0600.mp3"
+    },
+    {
+        "word": "normala",
+        "trans": "正常，正态",
+        "audio": "esperanto 1000基础词 一词一音/0601.mp3"
+    },
+    {
+        "word": "noti",
+        "trans": "注释，记下",
+        "audio": "esperanto 1000基础词 一词一音/0602.mp3"
+    },
+    {
+        "word": "nova",
+        "trans": "新",
+        "audio": "esperanto 1000基础词 一词一音/0603.mp3"
+    },
+    {
+        "word": "novembro",
+        "trans": "十一月",
+        "audio": "esperanto 1000基础词 一词一音/0604.mp3"
+    },
+    {
+        "word": "nu",
+        "trans": "（提起注意）",
+        "audio": "esperanto 1000基础词 一词一音/0605.mp3"
+    },
+    {
+        "word": "nubo",
+        "trans": "云",
+        "audio": "esperanto 1000基础词 一词一音/0606.mp3"
+    },
+    {
+        "word": "nulo",
+        "trans": "零",
+        "audio": "esperanto 1000基础词 一词一音/0607.mp3"
+    },
+    {
+        "word": "numero",
+        "trans": "号，期",
+        "audio": "esperanto 1000基础词 一词一音/0608.mp3"
+    },
+    {
+        "word": "nun",
+        "trans": "现在",
+        "audio": "esperanto 1000基础词 一词一音/0609.mp3"
+    },
+    {
+        "word": "nur",
+        "trans": "仅仅，只有",
+        "audio": "esperanto 1000基础词 一词一音/0610.mp3"
+    },
+    {
+        "word": "o",
+        "trans": "[词尾]名词",
+        "audio": "esperanto 1000基础词 一词一音/0611.mp3"
+    },
+    {
+        "word": "obei",
+        "trans": "服从，听从",
+        "audio": "esperanto 1000基础词 一词一音/0612.mp3"
+    },
+    {
+        "word": "objekto",
+        "trans": "东西，事情",
+        "audio": "esperanto 1000基础词 一词一音/0613.mp3"
+    },
+    {
+        "word": "obl",
+        "trans": "…倍的",
+        "audio": "esperanto 1000基础词 一词一音/0614.mp3"
+    },
+    {
+        "word": "odori",
+        "trans": "发出气味",
+        "audio": "esperanto 1000基础词 一词一音/0615.mp3"
+    },
+    {
+        "word": "ofico",
+        "trans": "职位，公职",
+        "audio": "esperanto 1000基础词 一词一音/0616.mp3"
+    },
+    {
+        "word": "ofte",
+        "trans": "经常地",
+        "audio": "esperanto 1000基础词 一词一音/0617.mp3"
+    },
+    {
+        "word": "ok",
+        "trans": "八",
+        "audio": "esperanto 1000基础词 一词一音/0618.mp3"
+    },
+    {
+        "word": "okazi",
+        "trans": "发生",
+        "audio": "esperanto 1000基础词 一词一音/0619.mp3"
+    },
+    {
+        "word": "okcidento",
+        "trans": "西，西方",
+        "audio": "esperanto 1000基础词 一词一音/0620.mp3"
+    },
+    {
+        "word": "oktobro",
+        "trans": "十月",
+        "audio": "esperanto 1000基础词 一词一音/0621.mp3"
+    },
+    {
+        "word": "okulo",
+        "trans": "眼睛",
+        "audio": "esperanto 1000基础词 一词一音/0622.mp3"
+    },
+    {
+        "word": "okupi",
+        "trans": "占领，占",
+        "audio": "esperanto 1000基础词 一词一音/0623.mp3"
+    },
+    {
+        "word": "ol",
+        "trans": "比",
+        "audio": "esperanto 1000基础词 一词一音/0624.mp3"
+    },
+    {
+        "word": "oleo",
+        "trans": "油（统称）",
+        "audio": "esperanto 1000基础词 一词一音/0625.mp3"
+    },
+    {
+        "word": "on",
+        "trans": "…分之一的",
+        "audio": "esperanto 1000基础词 一词一音/0626.mp3"
+    },
+    {
+        "word": "oni",
+        "trans": "人们",
+        "audio": "esperanto 1000基础词 一词一音/0627.mp3"
+    },
+    {
+        "word": "onklo",
+        "trans": "叔，伯",
+        "audio": "esperanto 1000基础词 一词一音/0628.mp3"
+    },
+    {
+        "word": "ont",
+        "trans": "主动将来分词（表将要）",
+        "audio": "esperanto 1000基础词 一词一音/0629.mp3"
+    },
+    {
+        "word": "opinio",
+        "trans": "意见",
+        "audio": "esperanto 1000基础词 一词一音/0630.mp3"
+    },
+    {
+        "word": "ordinara",
+        "trans": "平常，普通",
+        "audio": "esperanto 1000基础词 一词一音/0631.mp3"
+    },
+    {
+        "word": "ordo",
+        "trans": "次序，条理",
+        "audio": "esperanto 1000基础词 一词一音/0632.mp3"
+    },
+    {
+        "word": "ordoni",
+        "trans": "命令，吩咐",
+        "audio": "esperanto 1000基础词 一词一音/0633.mp3"
+    },
+    {
+        "word": "orelo",
+        "trans": "耳朵",
+        "audio": "esperanto 1000基础词 一词一音/0634.mp3"
+    },
+    {
+        "word": "organizi",
+        "trans": "组织",
+        "audio": "esperanto 1000基础词 一词一音/0635.mp3"
+    },
+    {
+        "word": "oriento",
+        "trans": "东，东方",
+        "audio": "esperanto 1000基础词 一词一音/0636.mp3"
+    },
+    {
+        "word": "originala",
+        "trans": "最初的，原始的",
+        "audio": "esperanto 1000基础词 一词一音/0637.mp3"
+    },
+    {
+        "word": "oro",
+        "trans": "金，金钱",
+        "audio": "esperanto 1000基础词 一词一音/0638.mp3"
+    },
+    {
+        "word": "os",
+        "trans": "[词尾]直陈式将来时",
+        "audio": "esperanto 1000基础词 一词一音/0639.mp3"
+    },
+    {
+        "word": "osto",
+        "trans": "骨，骨头",
+        "audio": "esperanto 1000基础词 一词一音/0640.mp3"
+    },
+    {
+        "word": "ot",
+        "trans": "被动将来分词（表将要）",
+        "audio": "esperanto 1000基础词 一词一音/0641.mp3"
+    },
+    {
+        "word": "ovo",
+        "trans": "卵，蛋",
+        "audio": "esperanto 1000基础词 一词一音/0642.mp3"
+    },
+    {
+        "word": "paco",
+        "trans": "和平，平安",
+        "audio": "esperanto 1000基础词 一词一音/0643.mp3"
+    },
+    {
+        "word": "pagi",
+        "trans": "付钱，偿还",
+        "audio": "esperanto 1000基础词 一词一音/0644.mp3"
+    },
+    {
+        "word": "paĝo",
+        "trans": "页（一面）",
+        "audio": "esperanto 1000基础词 一词一音/0645.mp3"
+    },
+    {
+        "word": "pako",
+        "trans": "包裹",
+        "audio": "esperanto 1000基础词 一词一音/0646.mp3"
+    },
+    {
+        "word": "palpi",
+        "trans": "摸，摸索",
+        "audio": "esperanto 1000基础词 一词一音/0647.mp3"
+    },
+    {
+        "word": "pano",
+        "trans": "面包，生计",
+        "audio": "esperanto 1000基础词 一词一音/0648.mp3"
+    },
+    {
+        "word": "pantalono",
+        "trans": "裤子，长裤",
+        "audio": "esperanto 1000基础词 一词一音/0649.mp3"
+    },
+    {
+        "word": "papero",
+        "trans": "纸，文件",
+        "audio": "esperanto 1000基础词 一词一音/0650.mp3"
+    },
+    {
+        "word": "pardoni",
+        "trans": "饶恕，原谅",
+        "audio": "esperanto 1000基础词 一词一音/0651.mp3"
+    },
+    {
+        "word": "parko",
+        "trans": "公园，临时汽车停放场",
+        "audio": "esperanto 1000基础词 一词一音/0652.mp3"
+    },
+    {
+        "word": "paro",
+        "trans": "一双，一对",
+        "audio": "esperanto 1000基础词 一词一音/0653.mp3"
+    },
+    {
+        "word": "paroli",
+        "trans": "说话，演讲",
+        "audio": "esperanto 1000基础词 一词一音/0654.mp3"
+    },
+    {
+        "word": "parto",
+        "trans": "（整体的）一部分",
+        "audio": "esperanto 1000基础词 一词一音/0655.mp3"
+    },
+    {
+        "word": "pasi",
+        "trans": "走过，通过",
+        "audio": "esperanto 1000基础词 一词一音/0656.mp3"
+    },
+    {
+        "word": "paŝi",
+        "trans": "举步，迈步",
+        "audio": "esperanto 1000基础词 一词一音/0657.mp3"
+    },
+    {
+        "word": "patro",
+        "trans": "父亲",
+        "audio": "esperanto 1000基础词 一词一音/0658.mp3"
+    },
+    {
+        "word": "peco",
+        "trans": "片，块",
+        "audio": "esperanto 1000基础词 一词一音/0659.mp3"
+    },
+    {
+        "word": "pendi",
+        "trans": "挂，垂",
+        "audio": "esperanto 1000基础词 一词一音/0660.mp3"
+    },
+    {
+        "word": "peni",
+        "trans": "努力，费力",
+        "audio": "esperanto 1000基础词 一词一音/0661.mp3"
+    },
+    {
+        "word": "pensi",
+        "trans": "思索，考虑",
+        "audio": "esperanto 1000基础词 一词一音/0662.mp3"
+    },
+    {
+        "word": "pentri",
+        "trans": "画，绘",
+        "audio": "esperanto 1000基础词 一词一音/0663.mp3"
+    },
+    {
+        "word": "per",
+        "trans": "以，用",
+        "audio": "esperanto 1000基础词 一词一音/0664.mp3"
+    },
+    {
+        "word": "perdi",
+        "trans": "失去",
+        "audio": "esperanto 1000基础词 一词一音/0665.mp3"
+    },
+    {
+        "word": "perfekta",
+        "trans": "完美，完善",
+        "audio": "esperanto 1000基础词 一词一音/0666.mp3"
+    },
+    {
+        "word": "periodo",
+        "trans": "周期，时期",
+        "audio": "esperanto 1000基础词 一词一音/0667.mp3"
+    },
+    {
+        "word": "permesi",
+        "trans": "允许，准许",
+        "audio": "esperanto 1000基础词 一词一音/0668.mp3"
+    },
+    {
+        "word": "persono",
+        "trans": "人，个人",
+        "audio": "esperanto 1000基础词 一词一音/0669.mp3"
+    },
+    {
+        "word": "peti",
+        "trans": "请求，请",
+        "audio": "esperanto 1000基础词 一词一音/0670.mp3"
+    },
+    {
+        "word": "pezi",
+        "trans": "重…，有…重量",
+        "audio": "esperanto 1000基础词 一词一音/0671.mp3"
+    },
+    {
+        "word": "piedo",
+        "trans": "脚",
+        "audio": "esperanto 1000基础词 一词一音/0672.mp3"
+    },
+    {
+        "word": "piki",
+        "trans": "刺，戳",
+        "audio": "esperanto 1000基础词 一词一音/0673.mp3"
+    },
+    {
+        "word": "pilko",
+        "trans": "球",
+        "audio": "esperanto 1000基础词 一词一音/0674.mp3"
+    },
+    {
+        "word": "plaĉi",
+        "trans": "讨…喜欢",
+        "audio": "esperanto 1000基础词 一词一音/0675.mp3"
+    },
+    {
+        "word": "plafono",
+        "trans": "天花板",
+        "audio": "esperanto 1000基础词 一词一音/0676.mp3"
+    },
+    {
+        "word": "planko",
+        "trans": "地板",
+        "audio": "esperanto 1000基础词 一词一音/0677.mp3"
+    },
+    {
+        "word": "plano",
+        "trans": "平面图，计划",
+        "audio": "esperanto 1000基础词 一词一音/0678.mp3"
+    },
+    {
+        "word": "planto",
+        "trans": "植物，作物",
+        "audio": "esperanto 1000基础词 一词一音/0679.mp3"
+    },
+    {
+        "word": "plasto",
+        "trans": "塑料",
+        "audio": "esperanto 1000基础词 一词一音/0680.mp3"
+    },
+    {
+        "word": "plej",
+        "trans": "最",
+        "audio": "esperanto 1000基础词 一词一音/0681.mp3"
+    },
+    {
+        "word": "plena",
+        "trans": "满，完全",
+        "audio": "esperanto 1000基础词 一词一音/0682.mp3"
+    },
+    {
+        "word": "plendi",
+        "trans": "诉苦，抱怨",
+        "audio": "esperanto 1000基础词 一词一音/0683.mp3"
+    },
+    {
+        "word": "plezuro",
+        "trans": "愉快，快乐",
+        "audio": "esperanto 1000基础词 一词一音/0684.mp3"
+    },
+    {
+        "word": "pli",
+        "trans": "更加，更",
+        "audio": "esperanto 1000基础词 一词一音/0685.mp3"
+    },
+    {
+        "word": "plori",
+        "trans": "哭",
+        "audio": "esperanto 1000基础词 一词一音/0686.mp3"
+    },
+    {
+        "word": "plu",
+        "trans": "继续",
+        "audio": "esperanto 1000基础词 一词一音/0687.mp3"
+    },
+    {
+        "word": "plumo",
+        "trans": "羽毛，钢笔（尖）",
+        "audio": "esperanto 1000基础词 一词一音/0688.mp3"
+    },
+    {
+        "word": "pluraj",
+        "trans": "好几个，不止一个",
+        "audio": "esperanto 1000基础词 一词一音/0689.mp3"
+    },
+    {
+        "word": "plus",
+        "trans": "加，正",
+        "audio": "esperanto 1000基础词 一词一音/0690.mp3"
+    },
+    {
+        "word": "pluvo",
+        "trans": "雨",
+        "audio": "esperanto 1000基础词 一词一音/0691.mp3"
+    },
+    {
+        "word": "po",
+        "trans": "各",
+        "audio": "esperanto 1000基础词 一词一音/0692.mp3"
+    },
+    {
+        "word": "poemo",
+        "trans": "诗",
+        "audio": "esperanto 1000基础词 一词一音/0693.mp3"
+    },
+    {
+        "word": "poento",
+        "trans": "分数，分",
+        "audio": "esperanto 1000基础词 一词一音/0694.mp3"
+    },
+    {
+        "word": "poezio",
+        "trans": "写诗艺术，作诗法",
+        "audio": "esperanto 1000基础词 一词一音/0695.mp3"
+    },
+    {
+        "word": "polico",
+        "trans": "公安、警察部门，其人员总称",
+        "audio": "esperanto 1000基础词 一词一音/0696.mp3"
+    },
+    {
+        "word": "politiko",
+        "trans": "政治，政治学",
+        "audio": "esperanto 1000基础词 一词一音/0697.mp3"
+    },
+    {
+        "word": "ponto",
+        "trans": "桥",
+        "audio": "esperanto 1000基础词 一词一音/0698.mp3"
+    },
+    {
+        "word": "popolo",
+        "trans": "人民，平民",
+        "audio": "esperanto 1000基础词 一词一音/0699.mp3"
+    },
+    {
+        "word": "populara",
+        "trans": "普及的，通俗",
+        "audio": "esperanto 1000基础词 一词一音/0700.mp3"
+    },
+    {
+        "word": "por",
+        "trans": "为，为了",
+        "audio": "esperanto 1000基础词 一词一音/0701.mp3"
+    },
+    {
+        "word": "pordo",
+        "trans": "门",
+        "audio": "esperanto 1000基础词 一词一音/0702.mp3"
+    },
+    {
+        "word": "porti",
+        "trans": "携带，搬运",
+        "audio": "esperanto 1000基础词 一词一音/0703.mp3"
+    },
+    {
+        "word": "post",
+        "trans": "在…后",
+        "audio": "esperanto 1000基础词 一词一音/0704.mp3"
+    },
+    {
+        "word": "postuli",
+        "trans": "要求",
+        "audio": "esperanto 1000基础词 一词一音/0705.mp3"
+    },
+    {
+        "word": "poŝo",
+        "trans": "衣袋",
+        "audio": "esperanto 1000基础词 一词一音/0706.mp3"
+    },
+    {
+        "word": "poŝto",
+        "trans": "邮车，邮政",
+        "audio": "esperanto 1000基础词 一词一音/0707.mp3"
+    },
+    {
+        "word": "poto",
+        "trans": "壶、罐、锅等",
+        "audio": "esperanto 1000基础词 一词一音/0708.mp3"
+    },
+    {
+        "word": "povi",
+        "trans": "能，可以",
+        "audio": "esperanto 1000基础词 一词一音/0709.mp3"
+    },
+    {
+        "word": "praktiko",
+        "trans": "实践，实际",
+        "audio": "esperanto 1000基础词 一词一音/0710.mp3"
+    },
+    {
+        "word": "pravi",
+        "trans": "正确",
+        "audio": "esperanto 1000基础词 一词一音/0711.mp3"
+    },
+    {
+        "word": "precipe",
+        "trans": "特别是，尤其是",
+        "audio": "esperanto 1000基础词 一词一音/0712.mp3"
+    },
+    {
+        "word": "preciza",
+        "trans": "精确，精密",
+        "audio": "esperanto 1000基础词 一词一音/0713.mp3"
+    },
+    {
+        "word": "preferi",
+        "trans": "宁愿，更喜欢",
+        "audio": "esperanto 1000基础词 一词一音/0714.mp3"
+    },
+    {
+        "word": "preĝi",
+        "trans": "祈祷，祷告",
+        "audio": "esperanto 1000基础词 一词一音/0715.mp3"
+    },
+    {
+        "word": "prelegi",
+        "trans": "讲课，（知识性的）演讲、报告",
+        "audio": "esperanto 1000基础词 一词一音/0716.mp3"
+    },
+    {
+        "word": "premi",
+        "trans": "压，挤",
+        "audio": "esperanto 1000基础词 一词一音/0717.mp3"
+    },
+    {
+        "word": "premio",
+        "trans": "奖品",
+        "audio": "esperanto 1000基础词 一词一音/0718.mp3"
+    },
+    {
+        "word": "preni",
+        "trans": "取，抓",
+        "audio": "esperanto 1000基础词 一词一音/0719.mp3"
+    },
+    {
+        "word": "prepari",
+        "trans": "准备，准备好",
+        "audio": "esperanto 1000基础词 一词一音/0720.mp3"
+    },
+    {
+        "word": "presi",
+        "trans": "印刷，付印",
+        "audio": "esperanto 1000基础词 一词一音/0721.mp3"
+    },
+    {
+        "word": "preskaŭ",
+        "trans": "几乎，差不多",
+        "audio": "esperanto 1000基础词 一词一音/0722.mp3"
+    },
+    {
+        "word": "preta",
+        "trans": "准备好的",
+        "audio": "esperanto 1000基础词 一词一音/0723.mp3"
+    },
+    {
+        "word": "preter",
+        "trans": "从…旁经过",
+        "audio": "esperanto 1000基础词 一词一音/0724.mp3"
+    },
+    {
+        "word": "prezenti",
+        "trans": "摆上，介绍",
+        "audio": "esperanto 1000基础词 一词一音/0725.mp3"
+    },
+    {
+        "word": "prezidi",
+        "trans": "主持，做主席",
+        "audio": "esperanto 1000基础词 一词一音/0726.mp3"
+    },
+    {
+        "word": "prezo",
+        "trans": "价格",
+        "audio": "esperanto 1000基础词 一词一音/0727.mp3"
+    },
+    {
+        "word": "pri",
+        "trans": "关于",
+        "audio": "esperanto 1000基础词 一词一音/0728.mp3"
+    },
+    {
+        "word": "principo",
+        "trans": "本原，起源",
+        "audio": "esperanto 1000基础词 一词一音/0729.mp3"
+    },
+    {
+        "word": "printempo",
+        "trans": "春天",
+        "audio": "esperanto 1000基础词 一词一音/0730.mp3"
+    },
+    {
+        "word": "pro",
+        "trans": "由于，因为",
+        "audio": "esperanto 1000基础词 一词一音/0731.mp3"
+    },
+    {
+        "word": "problemo",
+        "trans": "问题，习题",
+        "audio": "esperanto 1000基础词 一词一音/0732.mp3"
+    },
+    {
+        "word": "produkti",
+        "trans": "生产，产生",
+        "audio": "esperanto 1000基础词 一词一音/0733.mp3"
+    },
+    {
+        "word": "profunda",
+        "trans": "深，深刻",
+        "audio": "esperanto 1000基础词 一词一音/0734.mp3"
+    },
+    {
+        "word": "programo",
+        "trans": "程序表，节目单",
+        "audio": "esperanto 1000基础词 一词一音/0735.mp3"
+    },
+    {
+        "word": "progresi",
+        "trans": "进步，发展",
+        "audio": "esperanto 1000基础词 一词一音/0736.mp3"
+    },
+    {
+        "word": "projekto",
+        "trans": "打算，设想",
+        "audio": "esperanto 1000基础词 一词一音/0737.mp3"
+    },
+    {
+        "word": "proksima",
+        "trans": "近",
+        "audio": "esperanto 1000基础词 一词一音/0738.mp3"
+    },
+    {
+        "word": "promeni",
+        "trans": "散步，溜达",
+        "audio": "esperanto 1000基础词 一词一音/0739.mp3"
+    },
+    {
+        "word": "promesi",
+        "trans": "答应，许诺",
+        "audio": "esperanto 1000基础词 一词一音/0740.mp3"
+    },
+    {
+        "word": "proponi",
+        "trans": "建议，提议",
+        "audio": "esperanto 1000基础词 一词一音/0741.mp3"
+    },
+    {
+        "word": "propra",
+        "trans": "特有的，自己的",
+        "audio": "esperanto 1000基础词 一词一音/0742.mp3"
+    },
+    {
+        "word": "provi",
+        "trans": "试，尝试",
+        "audio": "esperanto 1000基础词 一词一音/0743.mp3"
+    },
+    {
+        "word": "prunti",
+        "trans": "借",
+        "audio": "esperanto 1000基础词 一词一音/0744.mp3"
+    },
+    {
+        "word": "publiko",
+        "trans": "公众，观（听）众",
+        "audio": "esperanto 1000基础词 一词一音/0745.mp3"
+    },
+    {
+        "word": "puni",
+        "trans": "惩罚，处罚",
+        "audio": "esperanto 1000基础词 一词一音/0746.mp3"
+    },
+    {
+        "word": "punkto",
+        "trans": "点",
+        "audio": "esperanto 1000基础词 一词一音/0747.mp3"
+    },
+    {
+        "word": "pupo",
+        "trans": "洋娃娃，布袋木偶",
+        "audio": "esperanto 1000基础词 一词一音/0748.mp3"
+    },
+    {
+        "word": "pura",
+        "trans": "纯，干净",
+        "audio": "esperanto 1000基础词 一词一音/0749.mp3"
+    },
+    {
+        "word": "puŝi",
+        "trans": "推",
+        "audio": "esperanto 1000基础词 一词一音/0750.mp3"
+    },
+    {
+        "word": "radio",
+        "trans": "光线，射线",
+        "audio": "esperanto 1000基础词 一词一音/0751.mp3"
+    },
+    {
+        "word": "rado",
+        "trans": "轮",
+        "audio": "esperanto 1000基础词 一词一音/0752.mp3"
+    },
+    {
+        "word": "rajto",
+        "trans": "权利",
+        "audio": "esperanto 1000基础词 一词一音/0753.mp3"
+    },
+    {
+        "word": "rakonti",
+        "trans": "讲，叙述",
+        "audio": "esperanto 1000基础词 一词一音/0754.mp3"
+    },
+    {
+        "word": "rando",
+        "trans": "边，边缘",
+        "audio": "esperanto 1000基础词 一词一音/0755.mp3"
+    },
+    {
+        "word": "rango",
+        "trans": "级别，等级",
+        "audio": "esperanto 1000基础词 一词一音/0756.mp3"
+    },
+    {
+        "word": "rapida",
+        "trans": "快",
+        "audio": "esperanto 1000基础词 一词一音/0757.mp3"
+    },
+    {
+        "word": "raporti",
+        "trans": "转告，汇报",
+        "audio": "esperanto 1000基础词 一词一音/0758.mp3"
+    },
+    {
+        "word": "re",
+        "trans": "返回，再",
+        "audio": "esperanto 1000基础词 一词一音/0759.mp3"
+    },
+    {
+        "word": "redakti",
+        "trans": "草拟，拟订",
+        "audio": "esperanto 1000基础词 一词一音/0760.mp3"
+    },
+    {
+        "word": "regi",
+        "trans": "统治，治理",
+        "audio": "esperanto 1000基础词 一词一音/0761.mp3"
+    },
+    {
+        "word": "regiono",
+        "trans": "地区，区域",
+        "audio": "esperanto 1000基础词 一词一音/0762.mp3"
+    },
+    {
+        "word": "regulo",
+        "trans": "规则，规定",
+        "audio": "esperanto 1000基础词 一词一音/0763.mp3"
+    },
+    {
+        "word": "reĝo",
+        "trans": "王，国王",
+        "audio": "esperanto 1000基础词 一词一音/0764.mp3"
+    },
+    {
+        "word": "reklamo",
+        "trans": "广告",
+        "audio": "esperanto 1000基础词 一词一音/0765.mp3"
+    },
+    {
+        "word": "rekomendi",
+        "trans": "推荐，介绍",
+        "audio": "esperanto 1000基础词 一词一音/0766.mp3"
+    },
+    {
+        "word": "rekta",
+        "trans": "直，直达",
+        "audio": "esperanto 1000基础词 一词一音/0767.mp3"
+    },
+    {
+        "word": "religio",
+        "trans": "宗教",
+        "audio": "esperanto 1000基础词 一词一音/0768.mp3"
+    },
+    {
+        "word": "renkonti",
+        "trans": "碰到，对付",
+        "audio": "esperanto 1000基础词 一词一音/0769.mp3"
+    },
+    {
+        "word": "respondi",
+        "trans": "回答，对应",
+        "audio": "esperanto 1000基础词 一词一音/0770.mp3"
+    },
+    {
+        "word": "resti",
+        "trans": "停留，仍然",
+        "audio": "esperanto 1000基础词 一词一音/0771.mp3"
+    },
+    {
+        "word": "revuo",
+        "trans": "检阅，述评",
+        "audio": "esperanto 1000基础词 一词一音/0772.mp3"
+    },
+    {
+        "word": "rezulti",
+        "trans": "是…的结果，由…产生",
+        "audio": "esperanto 1000基础词 一词一音/0773.mp3"
+    },
+    {
+        "word": "ricevi",
+        "trans": "收到，得到",
+        "audio": "esperanto 1000基础词 一词一音/0774.mp3"
+    },
+    {
+        "word": "riĉa",
+        "trans": "富裕，丰富",
+        "audio": "esperanto 1000基础词 一词一音/0775.mp3"
+    },
+    {
+        "word": "ridi",
+        "trans": "笑",
+        "audio": "esperanto 1000基础词 一词一音/0776.mp3"
+    },
+    {
+        "word": "rigardi",
+        "trans": "看，看待",
+        "audio": "esperanto 1000基础词 一词一音/0777.mp3"
+    },
+    {
+        "word": "rilati",
+        "trans": "与…有关系，对待",
+        "audio": "esperanto 1000基础词 一词一音/0778.mp3"
+    },
+    {
+        "word": "rimarki",
+        "trans": "觉察，发觉",
+        "audio": "esperanto 1000基础词 一词一音/0779.mp3"
+    },
+    {
+        "word": "rimedo",
+        "trans": "手段，方法",
+        "audio": "esperanto 1000基础词 一词一音/0780.mp3"
+    },
+    {
+        "word": "ripeti",
+        "trans": "重复",
+        "audio": "esperanto 1000基础词 一词一音/0781.mp3"
+    },
+    {
+        "word": "ripozi",
+        "trans": "休息",
+        "audio": "esperanto 1000基础词 一词一音/0782.mp3"
+    },
+    {
+        "word": "rivero",
+        "trans": "河",
+        "audio": "esperanto 1000基础词 一词一音/0783.mp3"
+    },
+    {
+        "word": "rizo",
+        "trans": "稻属植物，稻粒",
+        "audio": "esperanto 1000基础词 一词一音/0784.mp3"
+    },
+    {
+        "word": "robo",
+        "trans": "无袖长衫，长袍",
+        "audio": "esperanto 1000基础词 一词一音/0785.mp3"
+    },
+    {
+        "word": "romano",
+        "trans": "长篇小说，传奇故事",
+        "audio": "esperanto 1000基础词 一词一音/0786.mp3"
+    },
+    {
+        "word": "rompi",
+        "trans": "打破，毁坏",
+        "audio": "esperanto 1000基础词 一词一音/0787.mp3"
+    },
+    {
+        "word": "rondo",
+        "trans": "圆，团体",
+        "audio": "esperanto 1000基础词 一词一音/0788.mp3"
+    },
+    {
+        "word": "rozo",
+        "trans": "蔷薇属植物（玫瑰、月季等）",
+        "audio": "esperanto 1000基础词 一词一音/0789.mp3"
+    },
+    {
+        "word": "rubriko",
+        "trans": "栏目，专栏",
+        "audio": "esperanto 1000基础词 一词一音/0790.mp3"
+    },
+    {
+        "word": "ruĝa",
+        "trans": "红色",
+        "audio": "esperanto 1000基础词 一词一音/0791.mp3"
+    },
+    {
+        "word": "rulo",
+        "trans": "卷，卷状物",
+        "audio": "esperanto 1000基础词 一词一音/0792.mp3"
+    },
+    {
+        "word": "sabato",
+        "trans": "星期六",
+        "audio": "esperanto 1000基础词 一词一音/0793.mp3"
+    },
+    {
+        "word": "saĝa",
+        "trans": "聪明，明智",
+        "audio": "esperanto 1000基础词 一词一音/0794.mp3"
+    },
+    {
+        "word": "sako",
+        "trans": "袋，口袋",
+        "audio": "esperanto 1000基础词 一词一音/0795.mp3"
+    },
+    {
+        "word": "salo",
+        "trans": "盐，食盐",
+        "audio": "esperanto 1000基础词 一词一音/0796.mp3"
+    },
+    {
+        "word": "salono",
+        "trans": "客厅，沙龙",
+        "audio": "esperanto 1000基础词 一词一音/0797.mp3"
+    },
+    {
+        "word": "salti",
+        "trans": "跳",
+        "audio": "esperanto 1000基础词 一词一音/0798.mp3"
+    },
+    {
+        "word": "saluti",
+        "trans": "致敬",
+        "audio": "esperanto 1000基础词 一词一音/0799.mp3"
+    },
+    {
+        "word": "sana",
+        "trans": "健康，未变质",
+        "audio": "esperanto 1000基础词 一词一音/0800.mp3"
+    },
+    {
+        "word": "sango",
+        "trans": "血，血统",
+        "audio": "esperanto 1000基础词 一词一音/0801.mp3"
+    },
+    {
+        "word": "sankta",
+        "trans": "圣的，神圣",
+        "audio": "esperanto 1000基础词 一词一音/0802.mp3"
+    },
+    {
+        "word": "sata",
+        "trans": "饱，满足",
+        "audio": "esperanto 1000基础词 一词一音/0803.mp3"
+    },
+    {
+        "word": "savi",
+        "trans": "救，挽救",
+        "audio": "esperanto 1000基础词 一词一音/0804.mp3"
+    },
+    {
+        "word": "scienco",
+        "trans": "科学，自然科学",
+        "audio": "esperanto 1000基础词 一词一音/0805.mp3"
+    },
+    {
+        "word": "scii",
+        "trans": "知道，了解",
+        "audio": "esperanto 1000基础词 一词一音/0806.mp3"
+    },
+    {
+        "word": "se",
+        "trans": "如果，假如",
+        "audio": "esperanto 1000基础词 一词一音/0807.mp3"
+    },
+    {
+        "word": "sed",
+        "trans": "但是",
+        "audio": "esperanto 1000基础词 一词一音/0808.mp3"
+    },
+    {
+        "word": "seĝo",
+        "trans": "椅子",
+        "audio": "esperanto 1000基础词 一词一音/0809.mp3"
+    },
+    {
+        "word": "seka",
+        "trans": "干，无味",
+        "audio": "esperanto 1000基础词 一词一音/0810.mp3"
+    },
+    {
+        "word": "sekretario",
+        "trans": "秘书，书记",
+        "audio": "esperanto 1000基础词 一词一音/0811.mp3"
+    },
+    {
+        "word": "sekso",
+        "trans": "性，性别",
+        "audio": "esperanto 1000基础词 一词一音/0812.mp3"
+    },
+    {
+        "word": "sekvi",
+        "trans": "跟随，遵循",
+        "audio": "esperanto 1000基础词 一词一音/0813.mp3"
+    },
+    {
+        "word": "semajno",
+        "trans": "星期，一周",
+        "audio": "esperanto 1000基础词 一词一音/0814.mp3"
+    },
+    {
+        "word": "sen",
+        "trans": "没有，无",
+        "audio": "esperanto 1000基础词 一词一音/0815.mp3"
+    },
+    {
+        "word": "senco",
+        "trans": "意义、含义",
+        "audio": "esperanto 1000基础词 一词一音/0816.mp3"
+    },
+    {
+        "word": "sendi",
+        "trans": "派出，发出",
+        "audio": "esperanto 1000基础词 一词一音/0817.mp3"
+    },
+    {
+        "word": "senti",
+        "trans": "觉得，感受",
+        "audio": "esperanto 1000基础词 一词一音/0818.mp3"
+    },
+    {
+        "word": "sep",
+        "trans": "七",
+        "audio": "esperanto 1000基础词 一词一音/0819.mp3"
+    },
+    {
+        "word": "septembro",
+        "trans": "九月",
+        "audio": "esperanto 1000基础词 一词一音/0820.mp3"
+    },
+    {
+        "word": "serĉi",
+        "trans": "寻找，探索",
+        "audio": "esperanto 1000基础词 一词一音/0821.mp3"
+    },
+    {
+        "word": "serio",
+        "trans": "一系列，一组",
+        "audio": "esperanto 1000基础词 一词一音/0822.mp3"
+    },
+    {
+        "word": "serioza",
+        "trans": "严肃，认真",
+        "audio": "esperanto 1000基础词 一词一音/0823.mp3"
+    },
+    {
+        "word": "servi",
+        "trans": "为…服务，有用于",
+        "audio": "esperanto 1000基础词 一词一音/0824.mp3"
+    },
+    {
+        "word": "ses",
+        "trans": "六",
+        "audio": "esperanto 1000基础词 一词一音/0825.mp3"
+    },
+    {
+        "word": "sezono",
+        "trans": "季节",
+        "audio": "esperanto 1000基础词 一词一音/0826.mp3"
+    },
+    {
+        "word": "si",
+        "trans": "第三人称反身代词",
+        "audio": "esperanto 1000基础词 一词一音/0827.mp3"
+    },
+    {
+        "word": "sidi",
+        "trans": "坐着",
+        "audio": "esperanto 1000基础词 一词一音/0828.mp3"
+    },
+    {
+        "word": "signifi",
+        "trans": "义为，意味着",
+        "audio": "esperanto 1000基础词 一词一音/0829.mp3"
+    },
+    {
+        "word": "signo",
+        "trans": "标记，征兆",
+        "audio": "esperanto 1000基础词 一词一音/0830.mp3"
+    },
+    {
+        "word": "silenti",
+        "trans": "沉默",
+        "audio": "esperanto 1000基础词 一词一音/0831.mp3"
+    },
+    {
+        "word": "simila",
+        "trans": "相似，像那样的",
+        "audio": "esperanto 1000基础词 一词一音/0832.mp3"
+    },
+    {
+        "word": "simpla",
+        "trans": "单一，简单",
+        "audio": "esperanto 1000基础词 一词一音/0833.mp3"
+    },
+    {
+        "word": "sinjoro",
+        "trans": "先生，老爷",
+        "audio": "esperanto 1000基础词 一词一音/0834.mp3"
+    },
+    {
+        "word": "sistemo",
+        "trans": "体系，系统",
+        "audio": "esperanto 1000基础词 一词一音/0835.mp3"
+    },
+    {
+        "word": "situacio",
+        "trans": "（常指不利的）处境，状况",
+        "audio": "esperanto 1000基础词 一词一音/0836.mp3"
+    },
+    {
+        "word": "skatolo",
+        "trans": "盒，箱",
+        "audio": "esperanto 1000基础词 一词一音/0837.mp3"
+    },
+    {
+        "word": "skribi",
+        "trans": "写",
+        "audio": "esperanto 1000基础词 一词一音/0838.mp3"
+    },
+    {
+        "word": "socio",
+        "trans": "社会",
+        "audio": "esperanto 1000基础词 一词一音/0839.mp3"
+    },
+    {
+        "word": "soifi",
+        "trans": "渴，渴望",
+        "audio": "esperanto 1000基础词 一词一音/0840.mp3"
+    },
+    {
+        "word": "sola",
+        "trans": "独自的，唯一的",
+        "audio": "esperanto 1000基础词 一词一音/0841.mp3"
+    },
+    {
+        "word": "soldato",
+        "trans": "士兵",
+        "audio": "esperanto 1000基础词 一词一音/0842.mp3"
+    },
+    {
+        "word": "solvi",
+        "trans": "溶解，解决",
+        "audio": "esperanto 1000基础词 一词一音/0843.mp3"
+    },
+    {
+        "word": "somero",
+        "trans": "夏天",
+        "audio": "esperanto 1000基础词 一词一音/0844.mp3"
+    },
+    {
+        "word": "soni",
+        "trans": "发声",
+        "audio": "esperanto 1000基础词 一词一音/0845.mp3"
+    },
+    {
+        "word": "speciala",
+        "trans": "特别，专门",
+        "audio": "esperanto 1000基础词 一词一音/0846.mp3"
+    },
+    {
+        "word": "speco",
+        "trans": "种类，品种",
+        "audio": "esperanto 1000基础词 一词一音/0847.mp3"
+    },
+    {
+        "word": "spegulo",
+        "trans": "镜子",
+        "audio": "esperanto 1000基础词 一词一音/0848.mp3"
+    },
+    {
+        "word": "sperta",
+        "trans": "有经验，熟练",
+        "audio": "esperanto 1000基础词 一词一音/0849.mp3"
+    },
+    {
+        "word": "spezo",
+        "trans": "收支",
+        "audio": "esperanto 1000基础词 一词一音/0850.mp3"
+    },
+    {
+        "word": "spico",
+        "trans": "香料",
+        "audio": "esperanto 1000基础词 一词一音/0851.mp3"
+    },
+    {
+        "word": "spiri",
+        "trans": "呼吸",
+        "audio": "esperanto 1000基础词 一词一音/0852.mp3"
+    },
+    {
+        "word": "spirito",
+        "trans": "精神（反：物质），灵魂",
+        "audio": "esperanto 1000基础词 一词一音/0853.mp3"
+    },
+    {
+        "word": "sporto",
+        "trans": "体育运动和游戏",
+        "audio": "esperanto 1000基础词 一词一音/0854.mp3"
+    },
+    {
+        "word": "stacio",
+        "trans": "车站，码头",
+        "audio": "esperanto 1000基础词 一词一音/0855.mp3"
+    },
+    {
+        "word": "stari",
+        "trans": "站着",
+        "audio": "esperanto 1000基础词 一词一音/0856.mp3"
+    },
+    {
+        "word": "stato",
+        "trans": "境况，状态",
+        "audio": "esperanto 1000基础词 一词一音/0857.mp3"
+    },
+    {
+        "word": "stelo",
+        "trans": "星",
+        "audio": "esperanto 1000基础词 一词一音/0858.mp3"
+    },
+    {
+        "word": "stranga",
+        "trans": "奇怪，奇异",
+        "audio": "esperanto 1000基础词 一词一音/0859.mp3"
+    },
+    {
+        "word": "strato",
+        "trans": "街（道）",
+        "audio": "esperanto 1000基础词 一词一音/0860.mp3"
+    },
+    {
+        "word": "streĉi",
+        "trans": "拉紧，张紧",
+        "audio": "esperanto 1000基础词 一词一音/0861.mp3"
+    },
+    {
+        "word": "studi",
+        "trans": "研究，攻读",
+        "audio": "esperanto 1000基础词 一词一音/0862.mp3"
+    },
+    {
+        "word": "stulta",
+        "trans": "愚钝，呆笨",
+        "audio": "esperanto 1000基础词 一词一音/0863.mp3"
+    },
+    {
+        "word": "sub",
+        "trans": "在…下",
+        "audio": "esperanto 1000基础词 一词一音/0864.mp3"
+    },
+    {
+        "word": "subita",
+        "trans": "突然的",
+        "audio": "esperanto 1000基础词 一词一音/0865.mp3"
+    },
+    {
+        "word": "sudo",
+        "trans": "南，南方",
+        "audio": "esperanto 1000基础词 一词一音/0866.mp3"
+    },
+    {
+        "word": "suferi",
+        "trans": "忍受痛苦，痛苦",
+        "audio": "esperanto 1000基础词 一词一音/0867.mp3"
+    },
+    {
+        "word": "sufiĉa",
+        "trans": "足够，充分",
+        "audio": "esperanto 1000基础词 一词一音/0868.mp3"
+    },
+    {
+        "word": "sukcesi",
+        "trans": "成功，成就",
+        "audio": "esperanto 1000基础词 一词一音/0869.mp3"
+    },
+    {
+        "word": "sukero",
+        "trans": "糖",
+        "audio": "esperanto 1000基础词 一词一音/0870.mp3"
+    },
+    {
+        "word": "sumo",
+        "trans": "和数，总合",
+        "audio": "esperanto 1000基础词 一词一音/0871.mp3"
+    },
+    {
+        "word": "suno",
+        "trans": "太阳，阳光",
+        "audio": "esperanto 1000基础词 一词一音/0872.mp3"
+    },
+    {
+        "word": "super",
+        "trans": "在…上方（不接触下方物体），高（超）过",
+        "audio": "esperanto 1000基础词 一词一音/0873.mp3"
+    },
+    {
+        "word": "supozi",
+        "trans": "猜想，假定",
+        "audio": "esperanto 1000基础词 一词一音/0874.mp3"
+    },
+    {
+        "word": "supre",
+        "trans": "在高处，在上边",
+        "audio": "esperanto 1000基础词 一词一音/0875.mp3"
+    },
+    {
+        "word": "sur",
+        "trans": "在…上面（并与之接触）",
+        "audio": "esperanto 1000基础词 一词一音/0876.mp3"
+    },
+    {
+        "word": "ŝafo",
+        "trans": "绵羊",
+        "audio": "esperanto 1000基础词 一词一音/0877.mp3"
+    },
+    {
+        "word": "ŝajni",
+        "trans": "好象，看样子",
+        "audio": "esperanto 1000基础词 一词一音/0878.mp3"
+    },
+    {
+        "word": "ŝanco",
+        "trans": "机会，时机",
+        "audio": "esperanto 1000基础词 一词一音/0879.mp3"
+    },
+    {
+        "word": "ŝanĝi",
+        "trans": "换，改变",
+        "audio": "esperanto 1000基础词 一词一音/0880.mp3"
+    },
+    {
+        "word": "ŝati",
+        "trans": "喜欢，重视",
+        "audio": "esperanto 1000基础词 一词一音/0881.mp3"
+    },
+    {
+        "word": "ŝerci",
+        "trans": "开玩笑，取笑",
+        "audio": "esperanto 1000基础词 一词一音/0882.mp3"
+    },
+    {
+        "word": "ŝi",
+        "trans": "她",
+        "audio": "esperanto 1000基础词 一词一音/0883.mp3"
+    },
+    {
+        "word": "ŝipo",
+        "trans": "船",
+        "audio": "esperanto 1000基础词 一词一音/0884.mp3"
+    },
+    {
+        "word": "ŝiri",
+        "trans": "撕开，撕裂",
+        "audio": "esperanto 1000基础词 一词一音/0885.mp3"
+    },
+    {
+        "word": "ŝlosi",
+        "trans": "锁，[~ilo]钥匙",
+        "audio": "esperanto 1000基础词 一词一音/0886.mp3"
+    },
+    {
+        "word": "ŝnuro",
+        "trans": "绳",
+        "audio": "esperanto 1000基础词 一词一音/0887.mp3"
+    },
+    {
+        "word": "ŝranko",
+        "trans": "橱，柜",
+        "audio": "esperanto 1000基础词 一词一音/0888.mp3"
+    },
+    {
+        "word": "ŝtato",
+        "trans": "国家、州，议会",
+        "audio": "esperanto 1000基础词 一词一音/0889.mp3"
+    },
+    {
+        "word": "ŝteli",
+        "trans": "偷",
+        "audio": "esperanto 1000基础词 一词一音/0890.mp3"
+    },
+    {
+        "word": "ŝtofo",
+        "trans": "织物，织品",
+        "audio": "esperanto 1000基础词 一词一音/0891.mp3"
+    },
+    {
+        "word": "ŝtono",
+        "trans": "石",
+        "audio": "esperanto 1000基础词 一词一音/0892.mp3"
+    },
+    {
+        "word": "ŝtrumpo",
+        "trans": "长袜",
+        "audio": "esperanto 1000基础词 一词一音/0893.mp3"
+    },
+    {
+        "word": "ŝtupo",
+        "trans": "台阶，阶段",
+        "audio": "esperanto 1000基础词 一词一音/0894.mp3"
+    },
+    {
+        "word": "ŝuo",
+        "trans": "鞋",
+        "audio": "esperanto 1000基础词 一词一音/0895.mp3"
+    },
+    {
+        "word": "tablo",
+        "trans": "桌，台",
+        "audio": "esperanto 1000基础词 一词一音/0896.mp3"
+    },
+    {
+        "word": "tabulo",
+        "trans": "木板，板条",
+        "audio": "esperanto 1000基础词 一词一音/0897.mp3"
+    },
+    {
+        "word": "tago",
+        "trans": "一日，白天",
+        "audio": "esperanto 1000基础词 一词一音/0898.mp3"
+    },
+    {
+        "word": "tamen",
+        "trans": "可是，然而",
+        "audio": "esperanto 1000基础词 一词一音/0899.mp3"
+    },
+    {
+        "word": "tasko",
+        "trans": "任务，工作",
+        "audio": "esperanto 1000基础词 一词一音/0900.mp3"
+    },
+    {
+        "word": "taso",
+        "trans": "杯子，天平盘",
+        "audio": "esperanto 1000基础词 一词一音/0901.mp3"
+    },
+    {
+        "word": "taŭgi",
+        "trans": "适合，有价值",
+        "audio": "esperanto 1000基础词 一词一音/0902.mp3"
+    },
+    {
+        "word": "teatro",
+        "trans": "戏院，剧院",
+        "audio": "esperanto 1000基础词 一词一音/0903.mp3"
+    },
+    {
+        "word": "tegmento",
+        "trans": "屋顶，顶部",
+        "audio": "esperanto 1000基础词 一词一音/0904.mp3"
+    },
+    {
+        "word": "teksto",
+        "trans": "原文，本文",
+        "audio": "esperanto 1000基础词 一词一音/0905.mp3"
+    },
+    {
+        "word": "telefono",
+        "trans": "电话（机）",
+        "audio": "esperanto 1000基础词 一词一音/0906.mp3"
+    },
+    {
+        "word": "telero",
+        "trans": "盘、碟、盆，盘状物",
+        "audio": "esperanto 1000基础词 一词一音/0907.mp3"
+    },
+    {
+        "word": "televidi",
+        "trans": "看电视",
+        "audio": "esperanto 1000基础词 一词一音/0908.mp3"
+    },
+    {
+        "word": "temo",
+        "trans": "题目，话题",
+        "audio": "esperanto 1000基础词 一词一音/0909.mp3"
+    },
+    {
+        "word": "tempo",
+        "trans": "时间",
+        "audio": "esperanto 1000基础词 一词一音/0910.mp3"
+    },
+    {
+        "word": "teni",
+        "trans": "持，握",
+        "audio": "esperanto 1000基础词 一词一音/0911.mp3"
+    },
+    {
+        "word": "teo",
+        "trans": "茶",
+        "audio": "esperanto 1000基础词 一词一音/0912.mp3"
+    },
+    {
+        "word": "teorio",
+        "trans": "理论，学说",
+        "audio": "esperanto 1000基础词 一词一音/0913.mp3"
+    },
+    {
+        "word": "tero",
+        "trans": "地，陆地",
+        "audio": "esperanto 1000基础词 一词一音/0914.mp3"
+    },
+    {
+        "word": "teruro",
+        "trans": "恐惧，恐怖",
+        "audio": "esperanto 1000基础词 一词一音/0915.mp3"
+    },
+    {
+        "word": "tia",
+        "trans": "那样的，那种的",
+        "audio": "esperanto 1000基础词 一词一音/0916.mp3"
+    },
+    {
+        "word": "tial",
+        "trans": "所以，因此",
+        "audio": "esperanto 1000基础词 一词一音/0917.mp3"
+    },
+    {
+        "word": "tiam",
+        "trans": "那时，当时",
+        "audio": "esperanto 1000基础词 一词一音/0918.mp3"
+    },
+    {
+        "word": "tie",
+        "trans": "那里，在那里",
+        "audio": "esperanto 1000基础词 一词一音/0919.mp3"
+    },
+    {
+        "word": "tiel",
+        "trans": "那样，这么",
+        "audio": "esperanto 1000基础词 一词一音/0920.mp3"
+    },
+    {
+        "word": "ties",
+        "trans": "那人的，那些人的",
+        "audio": "esperanto 1000基础词 一词一音/0921.mp3"
+    },
+    {
+        "word": "timi",
+        "trans": "害怕",
+        "audio": "esperanto 1000基础词 一词一音/0922.mp3"
+    },
+    {
+        "word": "tio",
+        "trans": "那个东西，那件事",
+        "audio": "esperanto 1000基础词 一词一音/0923.mp3"
+    },
+    {
+        "word": "tiom",
+        "trans": "那么多，那么些",
+        "audio": "esperanto 1000基础词 一词一音/0924.mp3"
+    },
+    {
+        "word": "tiri",
+        "trans": "拖，拉",
+        "audio": "esperanto 1000基础词 一词一音/0925.mp3"
+    },
+    {
+        "word": "tiu",
+        "trans": "那人，那个",
+        "audio": "esperanto 1000基础词 一词一音/0926.mp3"
+    },
+    {
+        "word": "tondi",
+        "trans": "剪，为…剪（毛）",
+        "audio": "esperanto 1000基础词 一词一音/0927.mp3"
+    },
+    {
+        "word": "tra",
+        "trans": "通过，经过",
+        "audio": "esperanto 1000基础词 一词一音/0928.mp3"
+    },
+    {
+        "word": "tradicio",
+        "trans": "传统，惯例",
+        "audio": "esperanto 1000基础词 一词一音/0929.mp3"
+    },
+    {
+        "word": "traduki",
+        "trans": "翻译，译",
+        "audio": "esperanto 1000基础词 一词一音/0930.mp3"
+    },
+    {
+        "word": "trafi",
+        "trans": "命中，触及",
+        "audio": "esperanto 1000基础词 一词一音/0931.mp3"
+    },
+    {
+        "word": "trakti",
+        "trans": "商谈，谈判",
+        "audio": "esperanto 1000基础词 一词一音/0932.mp3"
+    },
+    {
+        "word": "tranĉi",
+        "trans": "砍，切",
+        "audio": "esperanto 1000基础词 一词一音/0933.mp3"
+    },
+    {
+        "word": "trankvila",
+        "trans": "安宁，平静",
+        "audio": "esperanto 1000基础词 一词一音/0934.mp3"
+    },
+    {
+        "word": "trans",
+        "trans": "在…的那面",
+        "audio": "esperanto 1000基础词 一词一音/0935.mp3"
+    },
+    {
+        "word": "tre",
+        "trans": "很",
+        "audio": "esperanto 1000基础词 一词一音/0936.mp3"
+    },
+    {
+        "word": "tri",
+        "trans": "三",
+        "audio": "esperanto 1000基础词 一词一音/0937.mp3"
+    },
+    {
+        "word": "trinki",
+        "trans": "喝，干杯",
+        "audio": "esperanto 1000基础词 一词一音/0938.mp3"
+    },
+    {
+        "word": "tro",
+        "trans": "太，过分",
+        "audio": "esperanto 1000基础词 一词一音/0939.mp3"
+    },
+    {
+        "word": "trovi",
+        "trans": "发现，找到",
+        "audio": "esperanto 1000基础词 一词一音/0940.mp3"
+    },
+    {
+        "word": "truo",
+        "trans": "洞，孔",
+        "audio": "esperanto 1000基础词 一词一音/0941.mp3"
+    },
+    {
+        "word": "tuj",
+        "trans": "立刻",
+        "audio": "esperanto 1000基础词 一词一音/0942.mp3"
+    },
+    {
+        "word": "tuko",
+        "trans": "一块布，巾",
+        "audio": "esperanto 1000基础词 一词一音/0943.mp3"
+    },
+    {
+        "word": "turismo",
+        "trans": "旅游，游览",
+        "audio": "esperanto 1000基础词 一词一音/0944.mp3"
+    },
+    {
+        "word": "turisto",
+        "trans": "旅游者，观光者",
+        "audio": "esperanto 1000基础词 一词一音/0945.mp3"
+    },
+    {
+        "word": "turni",
+        "trans": "转动，使转到",
+        "audio": "esperanto 1000基础词 一词一音/0946.mp3"
+    },
+    {
+        "word": "tuŝi",
+        "trans": "碰，触",
+        "audio": "esperanto 1000基础词 一词一音/0947.mp3"
+    },
+    {
+        "word": "tuta",
+        "trans": "整个，全部",
+        "audio": "esperanto 1000基础词 一词一音/0948.mp3"
+    },
+    {
+        "word": "u",
+        "trans": "[词尾]动词命令式",
+        "audio": "esperanto 1000基础词 一词一音/0949.mp3"
+    },
+    {
+        "word": "uj",
+        "trans": "容器",
+        "audio": "esperanto 1000基础词 一词一音/0950.mp3"
+    },
+    {
+        "word": "ul",
+        "trans": "具有该特点的人或物",
+        "audio": "esperanto 1000基础词 一词一音/0951.mp3"
+    },
+    {
+        "word": "um",
+        "trans": "含义不定的后缀",
+        "audio": "esperanto 1000基础词 一词一音/0952.mp3"
+    },
+    {
+        "word": "universala",
+        "trans": "通用，普遍",
+        "audio": "esperanto 1000基础词 一词一音/0953.mp3"
+    },
+    {
+        "word": "universitato",
+        "trans": "（综合性）大学",
+        "audio": "esperanto 1000基础词 一词一音/0954.mp3"
+    },
+    {
+        "word": "unu",
+        "trans": "一",
+        "audio": "esperanto 1000基础词 一词一音/0955.mp3"
+    },
+    {
+        "word": "urbo",
+        "trans": "城市，都市",
+        "audio": "esperanto 1000基础词 一词一音/0956.mp3"
+    },
+    {
+        "word": "us",
+        "trans": "[词尾]动词虚拟式",
+        "audio": "esperanto 1000基础词 一词一音/0957.mp3"
+    },
+    {
+        "word": "utila",
+        "trans": "有益，有利",
+        "audio": "esperanto 1000基础词 一词一音/0958.mp3"
+    },
+    {
+        "word": "uzi",
+        "trans": "用",
+        "audio": "esperanto 1000基础词 一词一音/0959.mp3"
+    },
+    {
+        "word": "vagono",
+        "trans": "车厢",
+        "audio": "esperanto 1000基础词 一词一音/0960.mp3"
+    },
+    {
+        "word": "valida",
+        "trans": "有效，生效",
+        "audio": "esperanto 1000基础词 一词一音/0961.mp3"
+    },
+    {
+        "word": "valoro",
+        "trans": "价值，值",
+        "audio": "esperanto 1000基础词 一词一音/0962.mp3"
+    },
+    {
+        "word": "varma",
+        "trans": "热，暖和",
+        "audio": "esperanto 1000基础词 一词一音/0963.mp3"
+    },
+    {
+        "word": "vasta",
+        "trans": "广大，宽广",
+        "audio": "esperanto 1000基础词 一词一音/0964.mp3"
+    },
+    {
+        "word": "veki",
+        "trans": "唤醒",
+        "audio": "esperanto 1000基础词 一词一音/0965.mp3"
+    },
+    {
+        "word": "vendi",
+        "trans": "卖，出卖",
+        "audio": "esperanto 1000基础词 一词一音/0966.mp3"
+    },
+    {
+        "word": "vendredo",
+        "trans": "星期五",
+        "audio": "esperanto 1000基础词 一词一音/0967.mp3"
+    },
+    {
+        "word": "veni",
+        "trans": "来",
+        "audio": "esperanto 1000基础词 一词一音/0968.mp3"
+    },
+    {
+        "word": "venki",
+        "trans": "战胜，克服",
+        "audio": "esperanto 1000基础词 一词一音/0969.mp3"
+    },
+    {
+        "word": "vento",
+        "trans": "风",
+        "audio": "esperanto 1000基础词 一词一音/0970.mp3"
+    },
+    {
+        "word": "vera",
+        "trans": "真，实在",
+        "audio": "esperanto 1000基础词 一词一音/0971.mp3"
+    },
+    {
+        "word": "verda",
+        "trans": "绿色，绿",
+        "audio": "esperanto 1000基础词 一词一音/0972.mp3"
+    },
+    {
+        "word": "verki",
+        "trans": "写作，著述",
+        "audio": "esperanto 1000基础词 一词一音/0973.mp3"
+    },
+    {
+        "word": "vespero",
+        "trans": "傍晚，晚会",
+        "audio": "esperanto 1000基础词 一词一音/0974.mp3"
+    },
+    {
+        "word": "vesto",
+        "trans": "服装",
+        "audio": "esperanto 1000基础词 一词一音/0975.mp3"
+    },
+    {
+        "word": "vetero",
+        "trans": "天气",
+        "audio": "esperanto 1000基础词 一词一音/0976.mp3"
+    },
+    {
+        "word": "veturi",
+        "trans": "乘，搭乘",
+        "audio": "esperanto 1000基础词 一词一音/0977.mp3"
+    },
+    {
+        "word": "vi",
+        "trans": "您，你们",
+        "audio": "esperanto 1000基础词 一词一音/0978.mp3"
+    },
+    {
+        "word": "viando",
+        "trans": "（食用的）肉，肉食",
+        "audio": "esperanto 1000基础词 一词一音/0979.mp3"
+    },
+    {
+        "word": "vico",
+        "trans": "一列，队列",
+        "audio": "esperanto 1000基础词 一词一音/0980.mp3"
+    },
+    {
+        "word": "vidi",
+        "trans": "看见",
+        "audio": "esperanto 1000基础词 一词一音/0981.mp3"
+    },
+    {
+        "word": "vigla",
+        "trans": "活跃，精神焕发",
+        "audio": "esperanto 1000基础词 一词一音/0982.mp3"
+    },
+    {
+        "word": "vilaĝo",
+        "trans": "村，农村",
+        "audio": "esperanto 1000基础词 一词一音/0983.mp3"
+    },
+    {
+        "word": "vino",
+        "trans": "葡萄酒，酒",
+        "audio": "esperanto 1000基础词 一词一音/0984.mp3"
+    },
+    {
+        "word": "vintro",
+        "trans": "冬天",
+        "audio": "esperanto 1000基础词 一词一音/0985.mp3"
+    },
+    {
+        "word": "viro",
+        "trans": "男人，成年男子",
+        "audio": "esperanto 1000基础词 一词一音/0986.mp3"
+    },
+    {
+        "word": "viŝi",
+        "trans": "揩，抹",
+        "audio": "esperanto 1000基础词 一词一音/0987.mp3"
+    },
+    {
+        "word": "vitro",
+        "trans": "玻璃",
+        "audio": "esperanto 1000基础词 一词一音/0988.mp3"
+    },
+    {
+        "word": "vivi",
+        "trans": "生活，活",
+        "audio": "esperanto 1000基础词 一词一音/0989.mp3"
+    },
+    {
+        "word": "vizaĝo",
+        "trans": "面部，面孔",
+        "audio": "esperanto 1000基础词 一词一音/0990.mp3"
+    },
+    {
+        "word": "viziti",
+        "trans": "访问，拜访",
+        "audio": "esperanto 1000基础词 一词一音/0991.mp3"
+    },
+    {
+        "word": "voĉo",
+        "trans": "嗓音，话语",
+        "audio": "esperanto 1000基础词 一词一音/0992.mp3"
+    },
+    {
+        "word": "vojaĝi",
+        "trans": "旅行",
+        "audio": "esperanto 1000基础词 一词一音/0993.mp3"
+    },
+    {
+        "word": "vojo",
+        "trans": "路，路子",
+        "audio": "esperanto 1000基础词 一词一音/0994.mp3"
+    },
+    {
+        "word": "voki",
+        "trans": "呼喊，呼唤",
+        "audio": "esperanto 1000基础词 一词一音/0995.mp3"
+    },
+    {
+        "word": "voli",
+        "trans": "愿意，想要",
+        "audio": "esperanto 1000基础词 一词一音/0996.mp3"
+    },
+    {
+        "word": "volvi",
+        "trans": "缠，绕",
+        "audio": "esperanto 1000基础词 一词一音/0997.mp3"
+    },
+    {
+        "word": "vorto",
+        "trans": "词，话",
+        "audio": "esperanto 1000基础词 一词一音/0998.mp3"
+    },
+    {
+        "word": "vosto",
+        "trans": "尾巴，尾部",
+        "audio": "esperanto 1000基础词 一词一音/0999.mp3"
+    },
+    {
+        "word": "zorgi",
+        "trans": "照顾，关心",
+        "audio": "esperanto 1000基础词 一词一音/1000.mp3"
+    }
+];
+
+        // 难度配置
+        const difficulties = {
+            easy: { speed: 1.0, spawnRate: 2000, scoreMult: 1, name: "简单" },
+            medium: { speed: 2.0, spawnRate: 1500, scoreMult: 2, name: "普通" },
+            hard: { speed: 3.5, spawnRate: 1000, scoreMult: 3, name: "困难" }
+        };
+
+        // 生命值模式配置
+        const healthModes = {
+            conservative: { health: 150, damage: 10, name: '保守', icon: '🟢' },
+            standard: { health: 200, damage: 10, name: '标准', icon: '🔵' },
+            extended: { health: 300, damage: 10, name: '长效', icon: '🟣' }
+        };
+
+        // BGM 音乐列表
+        const bgmTracks = [
+            'slowlife.mp3',
+            'yesterday.mp3',
+            'hearty.mp3',
+            'floatinggarden.mp3',
+            'dawnofchange.mp3'
+        ];
+
+        // 颜色配置
+        const colors = {
+            primary: '#00f3ff',
+            secondary: '#ff00ff',
+            accent: '#ffff00',
+            danger: '#ff3366'
+        };
+
+        // ==================== 游戏状态 ====================
+
+        let gameState = {
+            isPlaying: false,
+            isPaused: false,
+            score: 0,
+            health: 100,
+            difficulty: 'easy',
+            words: [],
+            particles: [],
+            spawnRate: 2000,
+            fallSpeed: 1.0,
+            scoreMultiplier: 1,
+            soundEnabled: true,
+            wordMode: 'random',
+            currentWordIndex: 0,
+            healthMode: 'standard',
+            bgmEnabled: true,
+            bgmVolume: 0.3,
+            sfxEnabled: true
+        };
+
+        let canvas, ctx;
+        let animationId;
+        let lastTime = 0;
+        let spawnTimer = 0;
+        let audioContext;
+
+        // ==================== Word 类 ====================
+
+        class Word {
+            constructor(diff) {
+                let data;
+                if (gameState.wordMode === 'sequential') {
+                    // 按顺序模式
+                    data = wordDatabase[gameState.currentWordIndex % wordDatabase.length];
+                    gameState.currentWordIndex++;
+                } else {
+                    // 随机模式
+                    data = wordDatabase[Math.floor(Math.random() * wordDatabase.length)];
+                }
+                this.text = data.word;
+                this.trans = data.trans;
+                this.data = data;
+
+                // 计算单词宽度来确定位置范围
+                const estimatedWidth = this.text.length * 20;
+                this.x = Math.random() * (canvas.width - estimatedWidth - 100) + 50;
+                this.y = -30;
+
+                const difficulty = difficulties[diff];
+                this.speed = difficulty.speed * (0.8 + Math.random() * 0.4);
+                this.color = [colors.primary, colors.secondary, colors.accent][Math.floor(Math.random() * 3)];
+            }
+
+            update(deltaTime) {
+                this.y += this.speed * deltaTime * 60;
+            }
+
+            draw(ctx) {
+                ctx.save();
+
+                // 发光效果
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = this.color;
+
+                // 主单词
+                ctx.font = 'bold 28px "Segoe UI", sans-serif';
+                ctx.fillStyle = this.color;
+                ctx.textAlign = 'center';
+                ctx.fillText(this.text, this.x, this.y);
+
+                // 翻译（小字）
+                ctx.font = '16px "Segoe UI", sans-serif';
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                ctx.shadowBlur = 0;
+                ctx.fillText(this.trans, this.x, this.y + 22);
+
+                ctx.restore();
+            }
+
+            isOffScreen() {
+                return this.y > canvas.height + 30;
+            }
+        }
+
+        // ==================== Particle 类 ====================
+
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.vx = (Math.random() - 0.5) * 10;
+                this.vy = (Math.random() - 0.5) * 10;
+                this.life = 1.0;
+                this.decay = 0.02 + Math.random() * 0.02;
+                this.size = 2 + Math.random() * 4;
+                this.color = color || colors.primary;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += 0.2; // 重力
+                this.life -= this.decay;
+            }
+
+            draw(ctx) {
+                ctx.save();
+                ctx.globalAlpha = this.life;
+                ctx.fillStyle = this.color;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size * this.life, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+
+            isDead() {
+                return this.life <= 0;
+            }
+        }
+
+        // ==================== 单词模式设置 ====================
+
+        function setWordMode(mode) {
+            gameState.wordMode = mode;
+            document.getElementById('modeRandom').classList.toggle('active', mode === 'random');
+            document.getElementById('modeSequential').classList.toggle('active', mode === 'sequential');
+            // 保存到 localStorage
+            localStorage.setItem('wordMode', mode);
+        }
+
+        function initWordMode() {
+            // 从 localStorage 读取保存的模式
+            const savedMode = localStorage.getItem('wordMode') || 'random';
+            setWordMode(savedMode);
+        }
+
+        function setHealthMode(mode) {
+            gameState.healthMode = mode;
+            document.getElementById('healthConservative').classList.toggle('active', mode === 'conservative');
+            document.getElementById('healthStandard').classList.toggle('active', mode === 'standard');
+            document.getElementById('healthExtended').classList.toggle('active', mode === 'extended');
+            // 保存到 localStorage
+            localStorage.setItem('healthMode', mode);
+        }
+
+        function initHealthMode() {
+            // 从 localStorage 读取保存的模式
+            const savedMode = localStorage.getItem('healthMode') || 'standard';
+            setHealthMode(savedMode);
+        }
+
+        // ==================== BGM 播放器 ====================
+
+        let bgmPlayer = {
+            audio: null,
+            currentTrackIndex: 0,
+            isPlaying: false,
+
+            playRandom() {
+                if (!gameState.bgmEnabled) return;
+
+                // 随机选择一首
+                this.currentTrackIndex = Math.floor(Math.random() * bgmTracks.length);
+                this.play(this.currentTrackIndex);
+            },
+
+            play(index) {
+                if (!gameState.bgmEnabled) return;
+
+                if (this.audio) {
+                    this.audio.pause();
+                    this.audio = null;
+                }
+
+                const track = bgmTracks[index];
+                this.audio = new Audio(track);
+                this.audio.volume = gameState.bgmVolume;
+                // 不循环，播放结束后自动切换下一首
+                this.audio.play().catch(e => console.log('BGM play error:', e));
+                this.isPlaying = true;
+
+                // 播放结束后自动切换下一首
+                this.audio.addEventListener('ended', () => {
+                    this.next();
+                });
+            },
+
+            next() {
+                if (!gameState.bgmEnabled) return;
+                this.currentTrackIndex = (this.currentTrackIndex + 1) % bgmTracks.length;
+                this.play(this.currentTrackIndex);
+            },
+
+            stop() {
+                if (this.audio) {
+                    this.audio.pause();
+                    this.audio = null;
+                }
+                this.isPlaying = false;
+            },
+
+            setVolume(volume) {
+                gameState.bgmVolume = volume;
+                if (this.audio) {
+                    this.audio.volume = volume;
+                }
+                // 保存到 localStorage
+                localStorage.setItem('bgmVolume', volume);
+            },
+
+            toggle() {
+                gameState.bgmEnabled = !gameState.bgmEnabled;
+                localStorage.setItem('bgmEnabled', gameState.bgmEnabled);
+                updateSettingsUI();
+
+                if (gameState.bgmEnabled) {
+                    this.playRandom();
+                } else {
+                    this.stop();
+                }
+            }
+        };
+
+        // ==================== 设置面板 ====================
+
+        function openSettings() {
+            document.getElementById('settingsOverlay').classList.add('active');
+            updateSettingsUI();
+        }
+
+        function closeSettings() {
+            document.getElementById('settingsOverlay').classList.remove('active');
+        }
+
+        function updateSettingsUI() {
+            // 更新 BGM 状态
+            const bgmToggle = document.getElementById('bgmToggle');
+            const bgmStatus = document.getElementById('bgmStatus');
+            if (gameState.bgmEnabled) {
+                bgmToggle.textContent = '🔊';
+                bgmStatus.textContent = '已开启';
+                bgmToggle.classList.remove('off');
+            } else {
+                bgmToggle.textContent = '🔇';
+                bgmStatus.textContent = '已关闭';
+                bgmToggle.classList.add('off');
+            }
+
+            // 更新音效状态
+            const sfxToggle = document.getElementById('sfxToggle');
+            const sfxStatus = document.getElementById('sfxStatus');
+            if (gameState.sfxEnabled) {
+                sfxToggle.textContent = '🔊';
+                sfxStatus.textContent = '已开启';
+                sfxToggle.classList.remove('off');
+            } else {
+                sfxToggle.textContent = '🔇';
+                sfxStatus.textContent = '已关闭';
+                sfxToggle.classList.add('off');
+            }
+
+            // 更新音量滑块
+            document.getElementById('bgmVolumeSlider').value = gameState.bgmVolume * 100;
+        }
+
+        function toggleBGM() {
+            bgmPlayer.toggle();
+        }
+
+        function toggleSFX() {
+            gameState.sfxEnabled = !gameState.sfxEnabled;
+            localStorage.setItem('sfxEnabled', gameState.sfxEnabled);
+            updateSettingsUI();
+        }
+
+        function toggleAbout() {
+            const content = document.getElementById('aboutContent');
+            content.classList.toggle('expanded');
+        }
+
+        // 音量滑块事件
+        document.addEventListener('DOMContentLoaded', () => {
+            const slider = document.getElementById('bgmVolumeSlider');
+            slider.addEventListener('input', (e) => {
+                const volume = e.target.value / 100;
+                bgmPlayer.setVolume(volume);
+            });
+        });
+
+        // ==================== 初始化 ====================
+
+        function init() {
+            canvas = document.getElementById('gameCanvas');
+            ctx = canvas.getContext('2d');
+
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+
+            // 初始化 AudioContext
+            try {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            } catch (e) {
+                console.log('Web Audio API not supported');
+            }
+
+            // 检查存档
+            checkSavedProgress();
+
+            // 初始化单词模式
+            initWordMode();
+
+            // 初始化生命值模式
+            initHealthMode();
+
+            // 初始化 BGM 和音效设置
+            initAudioSettings();
+
+            // 加载最高分
+            loadHighScores();
+
+            // 输入监听
+            document.getElementById('wordInput').addEventListener('input', handleInput);
+
+            // 键盘监听（暂停）
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && gameState.isPlaying) {
+                    togglePause();
+                }
+            });
+
+            // 页面刷新/关闭前自动保存进度
+            window.addEventListener('beforeunload', () => {
+                if (gameState.isPlaying && !gameState.isPaused) {
+                    saveProgress();
+                }
+            });
+        }
+
+        function initAudioSettings() {
+            // 从 localStorage 读取 BGM 设置
+            const savedBgmEnabled = localStorage.getItem('bgmEnabled');
+            if (savedBgmEnabled !== null) {
+                gameState.bgmEnabled = savedBgmEnabled === 'true';
+            }
+
+            const savedBgmVolume = localStorage.getItem('bgmVolume');
+            if (savedBgmVolume !== null) {
+                gameState.bgmVolume = parseFloat(savedBgmVolume);
+            }
+
+            const savedSfxEnabled = localStorage.getItem('sfxEnabled');
+            if (savedSfxEnabled !== null) {
+                gameState.sfxEnabled = savedSfxEnabled === 'true';
+            }
+        }
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        // ==================== 游戏控制 ====================
+
+        function startGame(diff) {
+            const difficulty = difficulties[diff];
+            const healthMode = healthModes[gameState.healthMode];
+
+            gameState = {
+                isPlaying: true,
+                isPaused: false,
+                score: 0,
+                health: healthMode.health,
+                difficulty: diff,
+                words: [],
+                particles: [],
+                spawnRate: difficulty.spawnRate,
+                fallSpeed: difficulty.speed,
+                scoreMultiplier: difficulty.scoreMult,
+                soundEnabled: gameState.soundEnabled,
+                wordMode: localStorage.getItem('wordMode') || 'random',
+                currentWordIndex: 0,
+                healthMode: gameState.healthMode,
+                bgmEnabled: gameState.bgmEnabled,
+                bgmVolume: gameState.bgmVolume,
+                sfxEnabled: gameState.sfxEnabled
+            };
+
+            // 显示游戏界面
+            document.getElementById('mainMenu').style.display = 'none';
+            document.getElementById('gameContainer').classList.add('active');
+
+            // 更新 HUD
+            updateHUD();
+            updateDifficultyDisplay();
+
+            // 聚焦输入框
+            document.getElementById('wordInput').value = '';
+            document.getElementById('wordInput').focus();
+
+            // 启动 BGM
+            if (gameState.bgmEnabled) {
+                bgmPlayer.playRandom();
+            }
+
+            // 启动游戏循环
+            lastTime = performance.now();
+            spawnTimer = 0;
+            animationId = requestAnimationFrame(gameLoop);
+        }
+
+        function restartGame() {
+            document.getElementById('gameoverOverlay').classList.remove('active');
+            startGame(gameState.difficulty);
+        }
+
+        function togglePause() {
+            if (!gameState.isPlaying) return;
+
+            gameState.isPaused = !gameState.isPaused;
+
+            if (gameState.isPaused) {
+                // 暂停时保存进度
+                saveProgress();
+                document.getElementById('pauseOverlay').classList.add('active');
+                cancelAnimationFrame(animationId);
+            } else {
+                document.getElementById('pauseOverlay').classList.remove('active');
+                lastTime = performance.now();
+                animationId = requestAnimationFrame(gameLoop);
+                document.getElementById('wordInput').focus();
+            }
+        }
+
+        function backToMenu() {
+            // 取消动画帧
+            cancelAnimationFrame(animationId);
+
+            // 停止 BGM
+            bgmPlayer.stop();
+
+            // 重置状态
+            gameState.isPlaying = false;
+            gameState.isPaused = false;
+
+            // 隐藏游戏界面
+            document.getElementById('gameContainer').classList.remove('active');
+            document.getElementById('pauseOverlay').classList.remove('active');
+            document.getElementById('gameoverOverlay').classList.remove('active');
+
+            // 显示主菜单
+            document.getElementById('mainMenu').style.display = 'flex';
+
+            // 更新最高分显示
+            updateHighScoreDisplay();
+
+            // 检查存档
+            checkSavedProgress();
+        }
+
+        function gameOver() {
+            gameState.isPlaying = false;
+            cancelAnimationFrame(animationId);
+
+            // 停止 BGM
+            bgmPlayer.stop();
+
+            // 保存最高分
+            saveHighScore();
+
+            // 显示游戏结束界面
+            document.getElementById('finalScore').textContent = gameState.score;
+            document.getElementById('finalHighScore').textContent = getHighScore();
+            document.getElementById('gameoverOverlay').classList.add('active');
+        }
+
+        // ==================== 游戏循环 ====================
+
+        function gameLoop(timestamp) {
+            if (!gameState.isPlaying || gameState.isPaused) return;
+
+            const deltaTime = (timestamp - lastTime) / 1000;
+            lastTime = timestamp;
+
+            // 生成新单词
+            spawnTimer += deltaTime * 1000;
+            if (spawnTimer >= gameState.spawnRate) {
+                spawnWord();
+                spawnTimer = 0;
+            }
+
+            // 更新和绘制
+            update(deltaTime);
+            render();
+
+            animationId = requestAnimationFrame(gameLoop);
+        }
+
+        function spawnWord() {
+            gameState.words.push(new Word(gameState.difficulty));
+        }
+
+        function update(deltaTime) {
+            // 更新单词
+            for (let i = gameState.words.length - 1; i >= 0; i--) {
+                const word = gameState.words[i];
+                word.update(deltaTime);
+
+                // 检测触底
+                if (word.isOffScreen()) {
+                    const healthMode = healthModes[gameState.healthMode];
+                    takeDamage(healthMode.damage);
+                    gameState.words.splice(i, 1);
+                }
+            }
+
+            // 更新粒子
+            for (let i = gameState.particles.length - 1; i >= 0; i--) {
+                const particle = gameState.particles[i];
+                particle.update();
+                if (particle.isDead()) {
+                    gameState.particles.splice(i, 1);
+                }
+            }
+        }
+
+        function render() {
+            // 清空画布
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 绘制单词
+            gameState.words.forEach(word => word.draw(ctx));
+
+            // 绘制粒子
+            gameState.particles.forEach(particle => particle.draw(ctx));
+        }
+
+        // ==================== 输入处理 ====================
+
+        function handleInput(e) {
+            const input = e.target.value.trim().toLowerCase();
+
+            // 查找匹配的单词（优先匹配最底部的）
+            let matchedIndex = -1;
+            let maxY = -1;
+
+            gameState.words.forEach((word, index) => {
+                if (word.text.toLowerCase() === input) {
+                    if (word.y > maxY) {
+                        maxY = word.y;
+                        matchedIndex = index;
+                    }
+                }
+            });
+
+            if (matchedIndex !== -1) {
+                // 匹配成功
+                const word = gameState.words[matchedIndex];
+
+                // 创建爆炸效果
+                createExplosion(word.x, word.y - 10, word.color);
+
+                // 播放发音
+                playWordAudio(word.data);
+
+                // 播放音效
+                playSoundEffect('hit');
+
+                // 加分
+                gameState.score += 10 * gameState.scoreMultiplier;
+                updateHUD();
+
+                // 移除单词
+                gameState.words.splice(matchedIndex, 1);
+
+                // 清空输入框
+                e.target.value = '';
+            }
+        }
+
+        // ==================== 粒子效果 ====================
+
+        function createExplosion(x, y, color) {
+            for (let i = 0; i < 20; i++) {
+                gameState.particles.push(new Particle(x, y, color));
+            }
+        }
+
+        // ==================== 生命值系统 ====================
+
+        function takeDamage(amount) {
+            gameState.health -= amount;
+            if (gameState.health < 0) gameState.health = 0;
+
+            updateHUD();
+
+            // 闪红效果
+            const flash = document.getElementById('damageFlash');
+            flash.classList.add('active');
+            setTimeout(() => flash.classList.remove('active'), 100);
+
+            // 震动效果
+            document.getElementById('gameContainer').classList.add('shake');
+            setTimeout(() => document.getElementById('gameContainer').classList.remove('shake'), 300);
+
+            // 播放受伤音效
+            playSoundEffect('damage');
+
+            // 检测游戏结束
+            if (gameState.health <= 0) {
+                gameOver();
+            }
+        }
+
+        // ==================== HUD 更新 ====================
+
+        function updateHUD() {
+            document.getElementById('scoreDisplay').textContent = gameState.score;
+
+            // 计算血条百分比和显示数字
+            const maxHealth = healthModes[gameState.healthMode].health;
+            const healthPercent = (gameState.health / maxHealth) * 100;
+            document.getElementById('healthFill').style.width = healthPercent + '%';
+            document.getElementById('healthNumber').textContent = `${gameState.health} / ${maxHealth}`;
+        }
+
+        function updateDifficultyDisplay() {
+            document.getElementById('difficultyDisplay').textContent = difficulties[gameState.difficulty].name;
+        }
+
+        // ==================== 音频系统 ====================
+
+        function playWordAudio(wordData) {
+            if (!gameState.soundEnabled) return;
+            const audio = new Audio(wordData.audio);
+            audio.play().catch(e => console.log('Audio play error:', e));
+        }
+
+        function playSoundEffect(type) {
+            if (!gameState.sfxEnabled || !audioContext) return;
+
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            if (type === 'hit') {
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(1200, audioContext.currentTime + 0.1);
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.1);
+            } else if (type === 'damage') {
+                oscillator.type = 'sawtooth';
+                oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(50, audioContext.currentTime + 0.3);
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.3);
+            }
+        }
+
+        // ==================== 存档系统 ====================
+
+        function saveProgress() {
+            const saveData = {
+                score: gameState.score,
+                health: gameState.health,
+                difficulty: gameState.difficulty,
+                wordMode: gameState.wordMode,
+                currentWordIndex: gameState.currentWordIndex,
+                healthMode: gameState.healthMode,
+                words: gameState.words.map(w => ({
+                    text: w.text,
+                    trans: w.trans,
+                    x: w.x,
+                    y: w.y,
+                    speed: w.speed,
+                    color: w.color
+                })),
+                timestamp: Date.now()
+            };
+
+            localStorage.setItem('esperantoGameSave', JSON.stringify(saveData));
+        }
+
+        function checkSavedProgress() {
+            const saveData = localStorage.getItem('esperantoGameSave');
+            const resumeBtn = document.getElementById('resumeBtn');
+
+            if (saveData) {
+                const data = JSON.parse(saveData);
+                // 24小时内的存档才显示继续按钮
+                if (Date.now() - data.timestamp < 24 * 60 * 60 * 1000) {
+                    resumeBtn.classList.remove('hidden');
+                } else {
+                    resumeBtn.classList.add('hidden');
+                }
+            } else {
+                resumeBtn.classList.add('hidden');
+            }
+        }
+
+        function resumeGame() {
+            const saveData = localStorage.getItem('esperantoGameSave');
+            if (!saveData) return;
+
+            const data = JSON.parse(saveData);
+
+            gameState = {
+                isPlaying: true,
+                isPaused: false,
+                score: data.score,
+                health: data.health,
+                difficulty: data.difficulty,
+                wordMode: data.wordMode || 'random',
+                currentWordIndex: data.currentWordIndex || 0,
+                healthMode: data.healthMode || 'standard',
+                words: data.words.map(w => {
+                    const word = new Word(data.difficulty);
+                    word.text = w.text;
+                    word.trans = w.trans;
+                    word.x = w.x;
+                    word.y = w.y;
+                    word.speed = w.speed;
+                    word.color = w.color;
+                    return word;
+                }),
+                particles: [],
+                spawnRate: difficulties[data.difficulty].spawnRate,
+                fallSpeed: difficulties[data.difficulty].speed,
+                scoreMultiplier: difficulties[data.difficulty].scoreMult,
+                soundEnabled: gameState.soundEnabled,
+                bgmEnabled: gameState.bgmEnabled,
+                bgmVolume: gameState.bgmVolume,
+                sfxEnabled: gameState.sfxEnabled
+            };
+
+            // 显示游戏界面
+            document.getElementById('mainMenu').style.display = 'none';
+            document.getElementById('gameContainer').classList.add('active');
+
+            // 更新 HUD
+            updateHUD();
+            updateDifficultyDisplay();
+
+            // 聚焦输入框
+            document.getElementById('wordInput').value = '';
+            document.getElementById('wordInput').focus();
+
+            // 启动 BGM
+            if (gameState.bgmEnabled) {
+                bgmPlayer.playRandom();
+            }
+
+            // 启动游戏循环
+            lastTime = performance.now();
+            spawnTimer = 0;
+            animationId = requestAnimationFrame(gameLoop);
+
+            // 清除存档
+            localStorage.removeItem('esperantoGameSave');
+        }
+
+        // ==================== 最高分系统 ====================
+
+        function loadHighScores() {
+            const highScores = JSON.parse(localStorage.getItem('esperantoHighScores') || '{}');
+            updateHighScoreDisplay();
+        }
+
+        function getHighScore() {
+            const highScores = JSON.parse(localStorage.getItem('esperantoHighScores') || '{}');
+            return highScores[gameState.difficulty] || 0;
+        }
+
+        // 获取所有难度中的最高分（用于主菜单显示）
+        function getOverallHighScore() {
+            const highScores = JSON.parse(localStorage.getItem('esperantoHighScores') || '{}');
+            return Math.max(
+                highScores.easy || 0,
+                highScores.medium || 0,
+                highScores.hard || 0
+            );
+        }
+
+        function saveHighScore() {
+            const highScores = JSON.parse(localStorage.getItem('esperantoHighScores') || '{}');
+            const currentHigh = highScores[gameState.difficulty] || 0;
+
+            if (gameState.score > currentHigh) {
+                highScores[gameState.difficulty] = gameState.score;
+                localStorage.setItem('esperantoHighScores', JSON.stringify(highScores));
+                // 更新右上角显示
+                updateHighScoreDisplay();
+            }
+        }
+
+        function updateHighScoreDisplay() {
+            const highScore = getOverallHighScore();
+            document.getElementById('highScoreDisplay').textContent = highScore;
+        }
+
+        // ==================== 启动 ====================
+
+        window.onload = init;
+    </script>
+</body>
+</html>
