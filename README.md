@@ -7,10 +7,12 @@
 ### 核心特性
 - 霓虹赛博朋克风格视觉设计
 - 三种难度等级（简单/普通/困难）
-- 世界语单词发音学习
+- 1000 词世界语词库，带真人发音
+- 两种单词模式：完全随机/按顺序学习
+- 三种生命值模式：保守/标准/长效
 - 本地最高分记录
 - 游戏进度保存/恢复功能
-- 背景音乐与音效系统
+- 背景音乐与音效系统（含音量控制）
 
 ---
 
@@ -22,9 +24,9 @@
 | CSS3 | 样式与动画（霓虹发光效果、网格动画） |
 | Vanilla JavaScript | 游戏逻辑，无框架依赖 |
 | Canvas API | 游戏渲染（单词、粒子效果） |
-| Web Audio API | 音效合成 |
-| Speech Synthesis API | 单词发音（TTS） |
-| LocalStorage | 存档与最高分保存 |
+| Web Audio API | 音效合成（振荡器生成） |
+| HTML5 Audio | 背景音乐与单词发音播放 |
+| LocalStorage | 存档、最高分、设置保存 |
 
 ---
 
@@ -32,11 +34,19 @@
 
 ```
 世界语打字游戏/
-├── index.html          # 单文件应用（包含HTML/CSS/JS）
-└── audio/              # 音频文件夹（可选，用于存放本地发音文件）
-    ├── saluton.mp3
-    ├── amiko.mp3
-    └── ...
+├── index.html                          # 主程序文件（包含HTML/CSS/JS）
+├── add_words_full.js                   # 单词库更新工具（Node.js）
+├── 世界语1000词.txt                     # 单词源文件
+├── 游戏音乐版权声明.txt                  # BGM 版权信息
+├── esperanto 1000基础词 一词一音/       # 单词发音文件夹
+│   ├── 0001.mp3
+│   ├── 0002.mp3
+│   └── ... (1000个文件)
+├── slowlife.mp3                        # 背景音乐
+├── yesterday.mp3
+├── hearty.mp3
+├── floatinggarden.mp3
+└── dawnofchange.mp3
 ```
 
 ---
@@ -48,9 +58,9 @@
 #### 单词数据库 `wordDatabase`
 ```javascript
 const wordDatabase = [
-    { word: "saluton", trans: "你好", audio: "saluton.mp3" },
-    { word: "amiko", trans: "朋友", audio: "amiko.mp3" },
-    // ... 更多单词
+    { word: "a", trans: "[词尾]形容词，第…", audio: "esperanto 1000基础词 一词一音/0001.mp3" },
+    { word: "aboni", trans: "（事先付款）预订", audio: "esperanto 1000基础词 一词一音/0002.mp3" },
+    // ... 共 1000 个单词
 ];
 ```
 
@@ -61,19 +71,61 @@ const wordDatabase = [
 | medium | 2.0 | 1500 | 2x |
 | hard | 3.5 | 1000 | 3x |
 
+#### 生命值模式配置 `healthModes`
+| 模式 | 生命值 | 受伤值 | 说明 |
+|------|--------|--------|------|
+| conservative | 150 | 10 | 保守模式，适合新手 |
+| standard | 200 | 10 | 标准模式 |
+| extended | 300 | 10 | 长时模式，更持久 |
+
+#### 单词模式 `wordMode`
+| 模式 | 说明 |
+|------|------|
+| random | 完全随机选择单词 |
+| sequential | 按顺序选择单词（适合系统学习） |
+
+#### 背景音乐列表 `bgmTracks`
+```javascript
+const bgmTracks = [
+    'slowlife.mp3',      // Bensound - Slow Life
+    'yesterday.mp3',     // Bensound - Yesterday
+    'hearty.mp3',        // Bensound - Hearty
+    'floatinggarden.mp3', // Bensound - Floating Garden
+    'dawnofchange.mp3'   // Bensound - Dawn of Change
+];
+```
+
+#### 颜色配置 `colors`
+```javascript
+const colors = {
+    primary: '#00f3ff',   // 青色（主色）
+    secondary: '#ff00ff', // 洋红（辅色）
+    accent: '#ffff00',    // 黄色（强调）
+    danger: '#ff3366'     // 红色（危险）
+};
+```
+
 ### 2. 游戏状态 `gameState`
 
 ```javascript
 {
-    isPlaying: boolean,    // 游戏是否运行中
-    isPaused: boolean,     // 是否暂停
-    score: number,         // 当前分数
-    health: number,        // 生命值 (0-100)
-    difficulty: string,    // 当前难度
-    words: Word[],         // 屏幕上的单词对象
-    particles: Particle[], // 爆炸粒子效果
-    spawnRate: number,     // 单词生成间隔
-    fallSpeed: number      // 下落速度
+    isPlaying: boolean,        // 游戏是否运行中
+    isPaused: boolean,         // 是否暂停
+    score: number,             // 当前分数
+    health: number,            // 当前生命值
+    difficulty: string,        // 当前难度 (easy/medium/hard)
+    words: Word[],             // 屏幕上的单词对象
+    particles: Particle[],     // 爆炸粒子效果
+    spawnRate: number,         // 单词生成间隔(ms)
+    fallSpeed: number,         // 下落速度
+    scoreMultiplier: number,   // 分数倍率
+    soundEnabled: boolean,     // 是否启用声音
+    wordMode: string,          // 单词模式 (random/sequential)
+    currentWordIndex: number,  // 当前单词索引（顺序模式）
+    healthMode: string,        // 生命值模式
+    bgmEnabled: boolean,       // 背景音乐开关
+    bgmVolume: number,         // BGM音量 (0-1)
+    sfxEnabled: boolean        // 音效开关
 }
 ```
 
@@ -83,31 +135,56 @@ const wordDatabase = [
 ```javascript
 class Word {
     constructor(diff) {
+        // 根据单词模式选择数据
+        if (gameState.wordMode === 'sequential') {
+            data = wordDatabase[gameState.currentWordIndex % wordDatabase.length];
+            gameState.currentWordIndex++;
+        } else {
+            data = wordDatabase[Math.floor(Math.random() * wordDatabase.length)];
+        }
         this.text   // 世界语单词
         this.trans  // 中文翻译
         this.data   // 原始数据（用于发音）
         this.x, this.y   // 位置坐标
-        this.speed  // 下落速度
-        this.color  // 颜色
+        this.speed  // 下落速度（基于难度，带0.8-1.2随机波动）
+        this.color  // 随机颜色（primary/secondary/accent之一）
     }
-    update()  // 更新位置
-    draw()    // 绘制到Canvas
+    update(deltaTime)  // 更新位置：y += speed * deltaTime * 60
+    draw(ctx)         // 绘制到Canvas（带发光效果）
+    isOffScreen()     // 检测是否离开屏幕
 }
 ```
 
 #### `Particle` 类 - 爆炸粒子
 ```javascript
 class Particle {
-    constructor(x, y) {
+    constructor(x, y, color) {
         this.x, this.y    // 位置
-        this.vx, this.vy  // 速度向量
+        this.vx, this.vy  // 随机速度向量 (-5~5)
         this.life         // 生命周期 (1.0 → 0)
-        this.color        // 随机颜色
+        this.decay        // 衰减速度 (0.02~0.04)
+        this.size         // 粒子大小 (2~6)
+        this.color        // 颜色
     }
-    update()  // 更新位置与生命周期
-    draw()    // 绘制粒子
+    update()  // 更新位置与生命周期，应用重力
+    draw(ctx) // 绘制粒子（带透明度渐变）
 }
 ```
+
+#### `BGMPlayer` 类 - 背景音乐播放器
+```javascript
+class BGMPlayer {
+    constructor(tracks) {
+        this.tracks   // 音乐文件列表
+        this.current  // 当前索引
+        this.audio    // Audio对象
+    }
+    play()           // 播放音乐
+    pause()          // 暂停
+    stop()           // 停止
+    setVolume(vol)   // 设置音量
+    nextTrack()      // 切换下一首
+}
 
 ---
 
@@ -119,24 +196,28 @@ class Particle {
 │  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌──────────────┐   │
 │  │  简单   │  │  普通   │  │  困难   │  │ 继续上次进度 │   │
 │  └─────────┘  └─────────┘  └─────────┘  └──────────────┘   │
+│  ┌─────────────────┐  ┌─────────────────┐                   │
+│  │ 单词模式：随机/顺序│  │ 生命值：保守/标准/长效│            │
+│  └─────────────────┘  └─────────────────┘                   │
 └─────────────────────────────────────────────────────────────┘
                             │
                             ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                         游戏循环                              │
 │  ┌─────────────────────────────────────────────────────┐   │
-│  │  1. 根据生成间隔创建新单词                            │   │
-│  │  2. 更新所有单词位置                                  │   │
-│  │  3. 检测触底（扣血）                                  │   │
-│  │  4. 更新粒子效果                                      │   │
-│  │  5. 渲染画面                                          │   │
+│  │  1. 根据生成间隔创建新单词（随机/顺序模式）            │   │
+│  │  2. 更新所有单词位置（deltaTime归一化）                │   │
+│  │  3. 检测触底（扣血，触发受伤效果）                     │   │
+│  │  4. 更新粒子效果（重力、生命周期）                     │   │
+│  │  5. 渲染画面（单词、粒子、HUD）                        │   │
 │  └─────────────────────────────────────────────────────┘   │
 │                          │                                   │
 │        ┌─────────────────┼─────────────────┐                │
 │        ▼                 ▼                 ▼                │
 │   ┌─────────┐      ┌─────────┐      ┌──────────┐           │
 │   │ 输入匹配 │      │  触底   │      │ 暂停ESC  │           │
-│   │ 加分+音效│      │  扣血   │      │ 保存进度 │           │
+│   │加分+特效 │      │  扣血   │      │ 保存进度 │           │
+│   │+单词发音 │      │+震动效果 │      │ BGM暂停  │           │
 │   └─────────┘      └─────────┘      └──────────┘           │
 └─────────────────────────────────────────────────────────────┘
                             │
@@ -145,6 +226,7 @@ class Particle {
                     │   GAME OVER │
                     │  显示最终分数│
                     │  保存最高分 │
+                    │  BGM停止    │
                     └─────────────┘
 ```
 
@@ -156,10 +238,18 @@ class Particle {
 
 | 函数 | 说明 |
 |------|------|
-| `startGame(diff)` | 开始新游戏，重置状态 |
+| `startGame(diff)` | 开始新游戏，初始化状态和Canvas |
 | `restartGame()` | 重新开始当前难度 |
-| `togglePause()` | 暂停/继续游戏 |
-| `gameOver()` | 游戏结束处理 |
+| `togglePause()` | 暂停/继续游戏，自动保存进度 |
+| `backToMenu()` | 返回主菜单 |
+| `gameOver()` | 游戏结束处理，保存最高分 |
+
+### 单词模式设置
+
+| 函数 | 说明 |
+|------|------|
+| `setWordMode(mode)` | 设置单词模式（random/sequential） |
+| `setHealthMode(mode)` | 设置生命值模式（conservative/standard/extended） |
 
 ### 存档系统
 
@@ -175,7 +265,10 @@ class Particle {
     score: number,
     health: number,
     difficulty: string,
-    words: [{ text, trans, x, y, speed }],
+    wordMode: string,
+    currentWordIndex: number,
+    healthMode: string,
+    words: [{ text, trans, x, y, speed, color }],
     timestamp: number
 }
 ```
@@ -184,17 +277,37 @@ class Particle {
 
 | 函数 | 说明 |
 |------|------|
-| `playWordAudio(wordData)` | 播放单词发音（支持本地文件或TTS） |
-| `playSoundEffect(type)` | 播放合成音效（hit/damage） |
+| `playWordAudio(wordData)` | 播放单词发音（本地 mp3 文件） |
+| `playSoundEffect(type)` | 播放合成音效（hit: 正弦波, damage: 锯齿波） |
+
+**音效实现（Web Audio API）：**
+```javascript
+// hit 音效：正弦波，频率 800Hz → 1200Hz
+// damage 音效：锯齿波，频率 200Hz → 100Hz
+```
+
+### BGM 控制
+
+| 函数 | 说明 |
+|------|------|
+| `toggleBGM()` | 切换背景音乐开关 |
+| `toggleSFX()` | 切换音效开关 |
+| `bgmPlayer.setVolume(vol)` | 设置 BGM 音量（0-1） |
+| `bgmPlayer.nextTrack()` | 播放完自动切换下一首 |
 
 ### 渲染循环
 
 ```javascript
 function gameLoop(timestamp) {
-    // 计算 deltaTime
-    // 生成新单词
-    // 更新/绘制单词
-    // 更新/绘制粒子
+    const deltaTime = (timestamp - lastTime) / 1000;
+    lastTime = timestamp;
+
+    // 更新
+    update(deltaTime);
+
+    // 渲染
+    draw();
+
     requestAnimationFrame(gameLoop);
 }
 ```
@@ -204,11 +317,34 @@ function gameLoop(timestamp) {
 ## 输入处理
 
 ```javascript
-inputEl.addEventListener('input', (e) => {
-    // 获取输入内容
-    // 匹配屏幕上的单词（优先匹配最底部的）
-    // 匹配成功：播放发音、创建特效、加分
-});
+document.getElementById('wordInput').addEventListener('input', handleInput);
+
+function handleInput(e) {
+    const input = e.target.value.toLowerCase().trim();
+
+    // 遍历屏幕上的单词，查找匹配
+    gameState.words.forEach((word, index) => {
+        if (word.text.toLowerCase() === input) {
+            matchedIndex = index;
+        }
+    });
+
+    // 如果有匹配，优先选择 Y 坐标最大的（最接近底部）
+    if (matchedIndices.length > 0) {
+        const targetIndex = matchedIndices.reduce((max, idx) =>
+            gameState.words[idx].y > gameState.words[max].y ? idx : max
+        , 0);
+
+        // 消除单词
+        const word = gameState.words[targetIndex];
+        createExplosion(word.x, word.y - 10, word.color);
+        playWordAudio(word.data);
+        playSoundEffect('hit');
+        gameState.score += 10 * gameState.scoreMultiplier;
+        gameState.words.splice(targetIndex, 1);
+        e.target.value = '';
+    }
+}
 ```
 
 **匹配逻辑：**
@@ -225,18 +361,21 @@ inputEl.addEventListener('input', (e) => {
 
 | 效果 | 实现 |
 |------|------|
-| 背景网格 | `perspective` + `rotateX` + `translateY` 动画 |
-| 霓虹发光 | `text-shadow` + `box-shadow` |
-| 震动效果 | `@keyframes shake` 动画 |
-| 模糊背景 | `backdrop-filter: blur(5px)` |
+| 背景网格 | `perspective: 500px` + `rotateX(60deg)` + `translateY` 动画 |
+| 霓虹发光 | `text-shadow` + `box-shadow` 多层阴影 |
+| 震动效果 | `@keyframes shake` 左右平移动画 |
+| 受伤闪红 | `.damage-flash` 层，红色半透明覆盖 |
+| 模糊背景 | `backdrop-filter: blur(5px/10px)` |
+| 霓虹脉冲 | `@keyframes neonPulse` 文字阴影脉冲 |
 
 ### Canvas 效果
 
 | 效果 | 实现方式 |
 |------|----------|
-| 单词发光 | `ctx.shadowBlur` + `ctx.shadowColor` |
-| 爆炸粒子 | 粒子系统，随机速度和颜色 |
-| 双语显示 | 主单词大字 + 翻译小字 |
+| 单词发光 | `ctx.shadowBlur: 20` + `ctx.shadowColor` |
+| 爆炸粒子 | 粒子系统，随机速度、颜色、衰减 |
+| 双语显示 | 主单词 28px 粗体 + 翻译 16px 半透明 |
+| 粒子渐隐 | `ctx.globalAlpha = this.life` |
 
 ---
 
@@ -244,35 +383,57 @@ inputEl.addEventListener('input', (e) => {
 
 ### 添加新单词
 
-编辑 `wordDatabase` 数组：
+1. 在 `世界语1000词.txt` 中添加单词（格式：`单词 翻译`）
+2. 将对应的 mp3 发音文件放入 `esperanto 1000基础词 一词一音/` 文件夹
+3. 运行 `node add_words_full.js` 更新 `wordDatabase`
 
+### 添加新背景音乐
+
+1. 将 mp3 文件放入项目根目录
+2. 编辑 `bgmTracks` 数组：
 ```javascript
-{ word: "nova", trans: "新的", audio: "nova.mp3" }
+const bgmTracks = [
+    'slowlife.mp3',
+    'yesterday.mp3',
+    'your_new_music.mp3'  // 添加新音乐
+];
 ```
-
-### 使用本地音频文件
-
-1. 在项目目录创建 `audio/` 文件夹
-2. 放入对应的 `.mp3` 文件
-3. 修改 `playWordAudio()` 函数，取消注释本地文件部分
 
 ### 添加新难度
 
 编辑 `difficulties` 对象：
-
 ```javascript
-nightmare: { speed: 5.0, spawnRate: 600, scoreMult: 5 }
+const difficulties = {
+    easy: { speed: 1.0, spawnRate: 2000, scoreMult: 1, name: "简单" },
+    medium: { speed: 2.0, spawnRate: 1500, scoreMult: 2, name: "普通" },
+    hard: { speed: 3.5, spawnRate: 1000, scoreMult: 3, name: "困难" },
+    nightmare: { speed: 5.0, spawnRate: 600, scoreMult: 5, name: "噩梦" }  // 新难度
+};
+```
+
+### 添加新生命值模式
+
+编辑 `healthModes` 对象：
+```javascript
+const healthModes = {
+    conservative: { health: 150, damage: 10, name: '保守', icon: '🟢' },
+    standard: { health: 200, damage: 10, name: '标准', icon: '🔵' },
+    extended: { health: 300, damage: 10, name: '长效', icon: '🟣' },
+    endless: { health: 999, damage: 0, name: '无尽', icon: '♾️' }  // 新模式
+};
 ```
 
 ### 自定义样式
 
 修改 CSS `:root` 变量：
-
 ```css
 :root {
-    --primary: #00f3ff;    /* 主色调 */
-    --secondary: #ff00ff;  /* 辅色调 */
+    --primary: #00f3ff;    /* 主色调（青色） */
+    --secondary: #ff00ff;  /* 辅色调（洋红） */
+    --accent: #ffff00;     /* 强调色（黄色） */
+    --danger: #ff3366;     /* 危险色（红色） */
     --bg-color: #050510;   /* 背景色 */
+    --grid-color: rgba(0, 243, 255, 0.1);  /* 网格颜色 */
 }
 ```
 
@@ -292,19 +453,103 @@ nightmare: { speed: 5.0, spawnRate: 600, scoreMult: 5 }
 
 | 按键 | 功能 |
 |------|------|
-| ESC | 暂停/保存游戏 |
+| ESC | 暂停/继续游戏，自动保存进度 |
 
 ---
 
 ## 浏览器兼容性
 
-- Chrome/Edge: ✅ 完全支持
-- Firefox: ✅ 完全支持
-- Safari: ✅ 完全支持（需用户交互后播放音频）
+| 浏览器 | 支持状态 | 备注 |
+|--------|----------|------|
+| Chrome/Edge | ✅ 完全支持 | 推荐使用 |
+| Firefox | ✅ 完全支持 | - |
+| Safari | ✅ 完全支持 | 需用户交互后播放音频 |
+
+---
+
+## 背景音乐版权
+
+本游戏使用 Bensound 的免版税音乐：
+
+| 音乐名称 | 艺术家 | 授权码 |
+|----------|--------|--------|
+| Dawn of Change | Benjamin Lazzarus | MREQ7PYSI7LRNLJR |
+| Yesterday | Roman Senyk | RDNI1JG1LDCCLSWW |
+| Dawn of Change | Aventure | UHOEOFRWEDZB8DU4 |
+| Floating Garden | Aventure | B6SBKWBZQD2SBSQB |
+| - | Aventure | 2VCHYH5J5DQLQEBO |
+
+Music by: https://www.bensound.com/free-music-for-videos
+
+---
+
+## LocalStorage 数据结构
+
+### 游戏存档 `esperanto_save`
+```javascript
+{
+    score: number,
+    health: number,
+    difficulty: string,
+    wordMode: string,
+    currentWordIndex: number,
+    healthMode: string,
+    words: Array<{
+        text: string,
+        trans: string,
+        x: number,
+        y: number,
+        speed: number,
+        color: string
+    }>,
+    timestamp: number
+}
+```
+
+### 最高分 `esperanto_highscores`
+```javascript
+{
+    easy: number,
+    medium: number,
+    hard: number
+}
+```
+
+### 设置项
+| 键名 | 类型 | 说明 |
+|------|------|------|
+| `bgmEnabled` | boolean | 背景音乐开关 |
+| `bgmVolume` | number (0-1) | BGM 音量 |
+| `sfxEnabled` | boolean | 音效开关 |
+
+---
+
+## 工具文件说明
+
+### add_words_full.js
+
+用于更新 `wordDatabase` 的 Node.js 脚本：
+
+```bash
+node add_words_full.js
+```
+
+功能：
+1. 读取 `世界语1000词.txt`
+2. 生成 1000 个单词对象，格式：
+   ```javascript
+   {
+       word: "单词",
+       trans: "翻译",
+       audio: "esperanto 1000基础词 一词一音/0001.mp3"
+   }
+   ```
+3. 自动更新 `index.html` 中的 `wordDatabase` 数组
 
 ---
 
 ## 开发者
 
 - 创建日期: 2025
-- 技术文档版本: 1.0
+- 技术文档版本: 1.1
+- 联系邮箱: 1877303149@qq.com
