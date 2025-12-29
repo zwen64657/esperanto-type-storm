@@ -99,6 +99,12 @@
             text-shadow: 0 0 10px var(--secondary);
         }
 
+        .ai-badge {
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
         @keyframes neonPulse {
             0%, 100% { text-shadow: 0 0 10px var(--primary), 0 0 20px var(--primary), 0 0 40px var(--primary); }
             50% { text-shadow: 0 0 20px var(--primary), 0 0 40px var(--primary), 0 0 80px var(--primary), 0 0 120px var(--primary); }
@@ -728,6 +734,7 @@
         <div class="menu">
             <h1>ESPERANTO TYPE STORM</h1>
             <h2>世界语打字风暴</h2>
+            <div class="ai-badge">AI驱动：智谱GLM</div>
             <div class="menu-buttons">
                 <button class="btn" onclick="startGame('easy')">简单</button>
                 <button class="btn medium" onclick="startGame('medium')">普通</button>
@@ -6397,7 +6404,7 @@
 
             // 显示游戏结束界面
             document.getElementById('finalScore').textContent = gameState.score;
-            document.getElementById('finalHighScore').textContent = getHighScore();
+            document.getElementById('finalHighScore').textContent = getOverallHighScore();
             document.getElementById('gameoverOverlay').classList.add('active');
         }
 
